@@ -1,168 +1,429 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PhishNet — Live Activity</title>
+<title>PhishNet · Activity</title>
 <style>
-  :root{--bg:#0d151d;--surface:#131f29;--panel:#18303b;--line:#243642;--text:#e7eef4;
-    --muted:#9db0bd;--faint:#6c7e8b;--teal:#3fc3dc;--red:#ff6b5c;--amber:#e6b35c;--green:#48c98a;
-    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);
-    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 80px}
-  header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-  header h1{font-size:20px;margin:0;letter-spacing:-.01em}
-  .live{margin-left:auto;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;
-    color:var(--green);display:flex;align-items:center;gap:7px}
-  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
-  .live.off{color:var(--red)} .live.off .dot{background:var(--red);animation:none}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
-  .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .stat .k{font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
-  .stat .v{font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
-  .stat.red .v{color:var(--red)}.stat.green .v{color:var(--green)}.stat.teal .v{color:var(--teal)}
-  .feed{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-  .feedhd{padding:12px 16px;border-bottom:1px solid var(--line);font:600 11px var(--mono);
-    letter-spacing:.1em;text-transform:uppercase;color:var(--faint);display:flex;justify-content:space-between}
-  .row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);
-    animation:in .3s ease}
-  @keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-  .row:last-child{border-bottom:0}
-  .pill{flex:none;font:600 11px var(--mono);padding:4px 9px;border-radius:7px;letter-spacing:.02em}
-  .p-phish{background:rgba(255,107,92,.15);color:var(--red)}
-  .p-legit{background:rgba(72,201,138,.13);color:var(--green)}
-  .prob{flex:none;width:52px;text-align:right;font:600 13px var(--mono);font-variant-numeric:tabular-nums}
-  .url{flex:1;min-width:0;font:13px var(--mono);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .url small{color:var(--faint)}
-  .mods{flex:none;display:flex;gap:4px}
-  .mod{font:600 9px var(--mono);padding:2px 5px;border-radius:5px;background:var(--panel);color:var(--muted);text-transform:uppercase}
-  .by{flex:none;font:10px var(--mono);color:var(--faint);width:120px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ago{flex:none;font:11px var(--mono);color:var(--faint);width:44px;text-align:right}
-  .empty{padding:40px;text-align:center;color:var(--faint)}
-  .reasons{font-size:12px;color:var(--muted);padding:0 16px 10px 16px;margin-top:-4px}
-  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.by,.mods{display:none}}
-  .controls{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
-  .search{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--line);
-    color:var(--text);border-radius:10px;padding:10px 13px;font:13px var(--mono);outline:none}
-  .search:focus{border-color:var(--teal)}
-  .chips{display:flex;gap:6px}
-  .chip{font:600 11px var(--mono);letter-spacing:.03em;padding:8px 12px;border-radius:9px;cursor:pointer;
-    background:var(--surface);border:1px solid var(--line);color:var(--muted);text-transform:uppercase}
-  .chip.on{background:var(--panel);border-color:var(--teal);color:var(--teal)}
-  .exp{font:600 11px var(--mono);letter-spacing:.03em;padding:8px 12px;border-radius:9px;cursor:pointer;
-    background:var(--teal);border:0;color:#08222a;text-transform:uppercase}
-  .row.hide{display:none}
-  .trust{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
-  .trust .th{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
-  .trust .tin{display:flex;gap:8px}
-  .trust input{flex:1;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px 12px;font:13px var(--mono);outline:none}
-  .trust input:focus{border-color:var(--teal)}
-  .trust button{background:var(--teal);color:#08222a;border:0;border-radius:9px;padding:9px 14px;font:600 12px var(--mono);cursor:pointer}
-  .tdoms{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .tdom{font:12px var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:4px 10px;color:var(--muted);display:flex;gap:7px;align-items:center}
-  .tdom b{color:var(--green)}.tdom span{cursor:pointer;color:var(--faint)}.tdom span:hover{color:var(--red)}
+/* ── tokens ─────────────────────────────────────────────────────────────── */
+:root{
+  --bg:#fbfbfc; --surface:#fff; --raised:#f6f7f9;
+  --line:#e6e8ec; --line-2:#d6dae1;
+  --fg:#14171c; --fg-2:#5b6472; --fg-3:#8a94a3;
+  --accent:#3b6fd4; --accent-soft:rgba(59,111,212,.09);
+  --danger:#c8433c; --danger-soft:rgba(200,67,60,.09);
+  --ok:#2f7d55;    --ok-soft:rgba(47,125,85,.09);
+  --warn:#a8702a;  --warn-soft:rgba(168,112,42,.10);
+  --shadow:0 1px 2px rgba(16,20,28,.05),0 1px 3px rgba(16,20,28,.04);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0a0c0f; --surface:#101318; --raised:#161a20;
+    --line:#1e232b; --line-2:#2a313b;
+    --fg:#e8ebf0; --fg-2:#98a1b0; --fg-3:#6a7382;
+    --accent:#6a9bf0; --accent-soft:rgba(106,155,240,.12);
+    --danger:#e2645c; --danger-soft:rgba(226,100,92,.13);
+    --ok:#5aa87c;    --ok-soft:rgba(90,168,124,.13);
+    --warn:#c9963f;  --warn-soft:rgba(201,150,63,.13);
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.55 var(--sans)}
+.shell{max-width:1180px;margin:0 auto;padding:24px 24px 96px}
+button,input{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.top{display:flex;align-items:center;gap:12px;padding-bottom:18px;margin-bottom:20px;
+  border-bottom:1px solid var(--line)}
+.mark{width:26px;height:26px;flex:none;color:var(--accent)}
+.brand{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.brand span{color:var(--fg-3);font-weight:450}
+.tag{font:500 11px var(--mono);color:var(--fg-3);background:var(--raised);
+  border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+.status{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--fg-2)}
+.status i{width:7px;height:7px;border-radius:50%;background:var(--ok);
+  box-shadow:0 0 0 3px var(--ok-soft);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.45}}
+.status.down{color:var(--danger)} .status.down i{background:var(--danger);box-shadow:0 0 0 3px var(--danger-soft);animation:none}
+
+/* ── metrics ────────────────────────────────────────────────────────────── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:14px}
+.m{padding:15px 18px;border-right:1px solid var(--line)}
+.m:last-child{border-right:0}
+.m .lab{font-size:11.5px;color:var(--fg-3);letter-spacing:.01em}
+.m .val{font:600 24px/1.15 var(--sans);margin-top:5px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.m .sub{font-size:11.5px;color:var(--fg-3);margin-top:3px;font-variant-numeric:tabular-nums}
+.m.d .val{color:var(--danger)}
+
+/* ── timeline ───────────────────────────────────────────────────────────── */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);margin-bottom:14px}
+.phd{display:flex;align-items:baseline;gap:10px;padding:13px 18px 0}
+.phd h2{font-size:12.5px;font-weight:600;margin:0;letter-spacing:.005em}
+.phd .hint{font-size:11.5px;color:var(--fg-3);margin-left:auto}
+.spark{padding:8px 18px 14px}
+.spark svg{display:block;width:100%;height:56px;overflow:visible}
+.spark .gl{stroke:var(--line);stroke-width:1}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--fg-3);padding:0 18px 13px}
+.legend b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* ── toolbar ────────────────────────────────────────────────────────────── */
+.bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.find{position:relative;flex:1;min-width:200px}
+.find svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--fg-3)}
+.find input{width:100%;background:var(--surface);border:1px solid var(--line);color:var(--fg);
+  border-radius:8px;padding:8px 12px 8px 32px;font-size:13.5px;outline:none;transition:border-color .12s}
+.find input::placeholder{color:var(--fg-3)}
+.find input:focus{border-color:var(--accent)}
+.seg{display:flex;background:var(--raised);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{border:0;background:transparent;color:var(--fg-2);font-size:12.5px;font-weight:500;
+  padding:5px 11px;border-radius:6px;cursor:pointer;transition:background .12s,color .12s}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.ghost{border:1px solid var(--line);background:var(--surface);color:var(--fg-2);font-size:12.5px;
+  font-weight:500;padding:7px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.ghost:hover{color:var(--fg);border-color:var(--line-2)}
+.ghost svg{width:13px;height:13px}
+
+/* ── trusted ────────────────────────────────────────────────────────────── */
+.trust{padding:14px 18px}
+.trust .row1{display:flex;gap:8px}
+.trust input{flex:1;background:var(--bg);border:1px solid var(--line);color:var(--fg);
+  border-radius:8px;padding:8px 11px;font-size:13.5px;outline:none}
+.trust input:focus{border-color:var(--accent)}
+.trust .add{border:0;background:var(--accent);color:#fff;font-size:12.5px;font-weight:600;
+  padding:8px 15px;border-radius:8px;cursor:pointer}
+.trust .add:hover{filter:brightness(1.06)}
+.doms{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.dom{display:inline-flex;align-items:center;gap:7px;font:12.5px var(--mono);
+  background:var(--raised);border:1px solid var(--line);border-radius:7px;padding:3px 5px 3px 9px;color:var(--fg-2)}
+.dom button{border:0;background:transparent;color:var(--fg-3);cursor:pointer;font-size:14px;
+  line-height:1;padding:2px 4px;border-radius:4px}
+.dom button:hover{color:var(--danger);background:var(--danger-soft)}
+.none{font-size:12.5px;color:var(--fg-3)}
+
+/* ── table ──────────────────────────────────────────────────────────────── */
+/* fixed layout: a single long deeplink URL must not push the trailing
+   columns off-screen, so widths are declared rather than content-derived */
+.tbl{width:100%;border-collapse:collapse;table-layout:fixed}
+.tbl col.c-rail{width:3px} .tbl col.c-verd{width:96px} .tbl col.c-score{width:74px}
+.tbl col.c-sigw{width:150px} .tbl col.c-srcw{width:150px}
+.tbl col.c-latw{width:88px} .tbl col.c-when{width:72px}
+.tbl thead th{font-size:11px;font-weight:600;color:var(--fg-3);text-align:left;letter-spacing:.04em;
+  text-transform:uppercase;padding:9px 14px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--raised)}
+.tbl thead th:first-child{border-top-left-radius:var(--r)}
+.tbl thead th:last-child{border-top-right-radius:var(--r);text-align:right}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tbody tr{cursor:pointer;transition:background .1s}
+.tbl tbody tr:hover{background:var(--raised)}
+.tbl tbody tr:last-child td{border-bottom:0}
+.rail{width:3px;padding:0!important;background:var(--ok)}
+.rail.p{background:var(--danger)} .rail.s{background:var(--warn)}
+.verd{font-size:12.5px;font-weight:600;color:var(--ok);white-space:nowrap}
+.verd.p{color:var(--danger)} .verd.s{color:var(--warn)}
+.score{font:500 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--fg-2);width:56px}
+.loc{min-width:0;max-width:0;overflow:hidden}
+.loc .h{font:13px var(--mono);color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.loc .p{font:12px var(--mono);color:var(--fg-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.sig{display:flex;gap:4px}
+.sig span{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.03em;
+  padding:2px 5px;border-radius:4px;background:var(--raised);border:1px solid var(--line);color:var(--fg-3)}
+.sig span.on{color:var(--accent);border-color:var(--accent-soft);background:var(--accent-soft)}
+.src{font:12px var(--mono);color:var(--fg-3);white-space:nowrap}
+.lat{font:12px var(--mono);color:var(--fg-3);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.when{font:12px var(--mono);color:var(--fg-3);text-align:right;white-space:nowrap}
+tr.det td{background:var(--raised);border-bottom:1px solid var(--line);padding:11px 14px 13px 31px}
+.why{margin:0;padding-left:16px;color:var(--fg-2);font-size:12.5px}
+.why li{margin:1px 0}
+.gates{display:flex;gap:16px;margin-top:8px;font:11.5px var(--mono);color:var(--fg-3)}
+.gates b{color:var(--fg-2);font-weight:500}
+.blank{padding:52px 20px;text-align:center;color:var(--fg-3);font-size:13.5px}
+.blank svg{width:26px;height:26px;color:var(--line-2);margin-bottom:9px;display:block;margin-inline:auto}
+@media(max-width:880px){.metrics{grid-template-columns:repeat(2,1fr)}
+  .m:nth-child(2){border-right:0}.m:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .c-sig,.c-src,.c-lat{display:none}
+  .tbl col.c-sigw,.tbl col.c-srcw,.tbl col.c-latw{width:0}}
 </style></head>
-<body><div class="wrap">
-  <header>
-    <span style="font-size:22px">🛡️</span>
-    <h1>PhishNet — Live Activity</h1>
-    <span class="live" id="live"><span class="dot"></span>Live</span>
-  </header>
-  <div class="stats">
-    <div class="stat teal"><div class="k">Total scans</div><div class="v" id="s-total">0</div></div>
-    <div class="stat red"><div class="k">Phishing blocked</div><div class="v" id="s-phish">0</div></div>
-    <div class="stat green"><div class="k">Legitimate</div><div class="v" id="s-legit">0</div></div>
-    <div class="stat"><div class="k">Uptime</div><div class="v" id="s-up">0s</div></div>
+<body>
+<div class="shell">
+
+  <div class="top">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2.6 4.4 5.9v5.6c0 4.6 3.2 8.9 7.6 9.9 4.4-1 7.6-5.3 7.6-9.9V5.9L12 2.6Z"
+            stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="m8.9 12.1 2.2 2.2 4-4.4" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="brand">PhishNet <span>· Activity</span></div>
+    <span class="tag" id="dev">local</span>
+    <div class="status" id="status"><i></i><span>Connected</span></div>
   </div>
-  <div class="trust">
-    <div class="th">Trusted domains — never flagged (your portals, intranet, etc.)</div>
-    <div class="tin"><input id="td" placeholder="e.g. upes.ac.in" autocomplete="off"><button id="tadd">Trust</button></div>
-    <div class="tdoms" id="tdoms"></div>
+
+  <div class="metrics">
+    <div class="m"><div class="lab">Pages scanned</div><div class="val" id="m-total">—</div>
+      <div class="sub" id="m-rate"></div></div>
+    <div class="m d"><div class="lab">Threats blocked</div><div class="val" id="m-phish">—</div>
+      <div class="sub" id="m-pct"></div></div>
+    <div class="m"><div class="lab">Median latency</div><div class="val" id="m-lat">—</div>
+      <div class="sub">URL &amp; multimodal</div></div>
+    <div class="m"><div class="lab">Uptime</div><div class="val" id="m-up">—</div>
+      <div class="sub" id="m-since"></div></div>
   </div>
-  <div class="controls">
-    <input class="search" id="q" placeholder="Search URL or host…" autocomplete="off">
-    <div class="chips">
-      <span class="chip on" data-f="all">All</span>
-      <span class="chip" data-f="phishing">Phishing</span>
-      <span class="chip" data-f="suspicious">Suspicious</span>
-      <span class="chip" data-f="safe">Safe</span>
+
+  <div class="panel">
+    <div class="phd"><h2>Scan volume</h2><span class="hint" id="sp-range"></span></div>
+    <div class="spark"><svg id="spark" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+    <div class="legend">
+      <span><b style="background:var(--danger)"></b>Blocked</span>
+      <span><b style="background:var(--ok)"></b>Allowed</span>
     </div>
-    <button class="exp" id="export">⤓ CSV</button>
   </div>
-  <div class="feed">
-    <div class="feedhd"><span>Recent scans</span><span id="count"></span></div>
-    <div id="rows"><div class="empty">Waiting for the extension to scan a page…</div></div>
+
+  <div class="panel">
+    <div class="phd"><h2>Trusted domains</h2>
+      <span class="hint">Never flagged — your portals, intranet, campus sites</span></div>
+    <div class="trust">
+      <div class="row1">
+        <input id="td" placeholder="example.ac.in" autocomplete="off" spellcheck="false"
+               aria-label="Domain to trust">
+        <button class="add" id="tadd">Trust</button>
+      </div>
+      <div class="doms" id="doms"></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="find">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7"
+        stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="q" placeholder="Filter by host or path…" autocomplete="off" aria-label="Filter scans">
+    </div>
+    <div class="seg" id="seg" role="group" aria-label="Filter by verdict">
+      <button data-f="all"        aria-pressed="true">All</button>
+      <button data-f="phishing"   aria-pressed="false">Blocked</button>
+      <button data-f="suspicious" aria-pressed="false">Suspicious</button>
+      <button data-f="safe"       aria-pressed="false">Allowed</button>
+    </div>
+    <button class="ghost" id="csv">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Export</button>
+  </div>
+
+  <div class="panel" style="overflow:hidden">
+    <table class="tbl">
+      <colgroup>
+        <col class="c-rail"><col class="c-verd"><col class="c-score"><col>
+        <col class="c-sigw"><col class="c-srcw"><col class="c-latw"><col class="c-when">
+      </colgroup>
+      <thead><tr>
+        <th style="width:3px;padding:0"></th>
+        <th>Verdict</th><th>Score</th><th>Location</th>
+        <th class="c-sig">Signals</th><th class="c-src">Source</th>
+        <th class="c-lat" style="text-align:right">Latency</th><th>Seen</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
   </div>
 </div>
+
 <script>
-let ALL=[], filter="all", query="";
-function ago(t){const s=Math.max(0,Math.round(Date.now()/1000-t));
-  return s<60?s+"s":s<3600?Math.round(s/60)+"m":Math.round(s/3600)+"h";}
-function upt(s){return s<60?s+"s":s<3600?Math.round(s/60)+"m":(s/3600).toFixed(1)+"h";}
-function host(u){try{return new URL(u).host}catch(e){return u}}
-function path(u){try{const x=new URL(u);return x.pathname+x.search}catch(e){return ""}}
-function cat(e){return e.verdict==="phishing"?"phishing":(e.p>0.15?"suspicious":"safe");}
+"use strict";
+const $ = s => document.querySelector(s);
+let ALL = [], filt = "all", q = "", open = new Set();
+
+/* Scan records contain attacker-controlled URLs. Everything below is written
+   through textContent or this escaper -- never raw innerHTML interpolation. */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+const fmtAgo = t => { const s = Math.max(0, Math.round(Date.now()/1000 - t));
+  return s < 60 ? s+"s" : s < 3600 ? Math.round(s/60)+"m"
+       : s < 86400 ? Math.round(s/3600)+"h" : Math.round(s/86400)+"d"; };
+const fmtUp = s => s < 60 ? s+"s" : s < 3600 ? Math.round(s/60)+"m"
+       : s < 86400 ? (s/3600).toFixed(1)+"h" : (s/86400).toFixed(1)+"d";
+const hostOf = u => { try { return new URL(u).host } catch { return u } };
+const pathOf = u => { try { const x = new URL(u); return (x.pathname+x.search) || "/" } catch { return "" } };
+const band = e => e.verdict === "phishing" ? "phishing" : (e.p > 0.15 ? "suspicious" : "safe");
+
+/* ── volume sparkline: 40 buckets across the observed window ─────────────── */
+function drawSpark(ev){
+  const svg = $("#spark"), N = 40;
+  svg.textContent = "";
+  if (!ev.length){ $("#sp-range").textContent = ""; return; }
+  const ts = ev.map(e => e.t), lo = Math.min(...ts), hi = Math.max(...ts);
+  const span = Math.max(hi - lo, 1), W = 1000, H = 56, gap = 2;
+  const bw = W / N, bad = new Array(N).fill(0), good = new Array(N).fill(0);
+  for (const e of ev){
+    const i = Math.min(N-1, Math.floor(((e.t - lo)/span) * N));
+    (e.verdict === "phishing" ? bad : good)[i]++;
+  }
+  const peak = Math.max(1, ...bad.map((b,i) => b + good[i]));
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const NS = "http://www.w3.org/2000/svg";
+  const line = document.createElementNS(NS, "line");
+  line.setAttribute("x1",0); line.setAttribute("x2",W);
+  line.setAttribute("y1",H); line.setAttribute("y2",H); line.setAttribute("class","gl");
+  svg.appendChild(line);
+  for (let i = 0; i < N; i++){
+    let y = H;
+    for (const [n, col] of [[good[i], "var(--ok)"], [bad[i], "var(--danger)"]]){
+      if (!n) continue;
+      const h = (n / peak) * (H - 4);
+      const r = document.createElementNS(NS, "rect");
+      r.setAttribute("x", i*bw + gap/2); r.setAttribute("width", Math.max(1, bw - gap));
+      r.setAttribute("y", y - h); r.setAttribute("height", h);
+      r.setAttribute("fill", col); r.setAttribute("rx", 1.5); r.setAttribute("opacity", .85);
+      svg.appendChild(r); y -= h;
+    }
+  }
+  const mins = Math.round(span/60);
+  $("#sp-range").textContent = ev.length + " scans over " +
+    (mins < 60 ? mins+" min" : (span/3600).toFixed(1)+" h");
+}
+
+/* ── table ──────────────────────────────────────────────────────────────── */
 function render(){
-  const rows=document.getElementById("rows");
-  let ev=ALL.filter(e=>filter==="all"||cat(e)===filter);
-  if(query) ev=ev.filter(e=>(e.url||"").toLowerCase().includes(query));
-  document.getElementById("count").textContent=ev.length+" shown";
-  if(!ev.length){rows.innerHTML='<div class="empty">'+(ALL.length?'No matches.':'Waiting for the extension to scan a page…')+'</div>';return;}
-  rows.innerHTML=ev.map(e=>{
-    const phish=e.verdict==="phishing";
-    const mods=(e.modalities||[]).map(m=>`<span class="mod">${m}</span>`).join("");
-    return `<div class="row">
-      <span class="pill ${phish?'p-phish':'p-legit'}">${phish?'PHISH':'SAFE'}</span>
-      <span class="prob" style="color:${phish?'var(--red)':'var(--faint)'}">${(e.p*100).toFixed(0)}%</span>
-      <span class="url"><b>${host(e.url)}</b><small>${path(e.url)}</small></span>
-      <span class="mods">${mods}</span>
-      <span class="by">${e.decided_by||''}</span>
-      <span class="ago">${ago(e.t)}</span>
-    </div>`;
-  }).join("");
+  const body = $("#rows");
+  let ev = ALL.filter(e => filt === "all" || band(e) === filt);
+  if (q) ev = ev.filter(e => (e.url||"").toLowerCase().includes(q));
+  body.textContent = "";
+
+  if (!ev.length){
+    const tr = document.createElement("tr"), td = document.createElement("td");
+    td.colSpan = 8; td.className = "blank";
+    td.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7"'
+      + ' stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.5-3.5" stroke="currentColor"'
+      + ' stroke-width="1.6" stroke-linecap="round"/></svg>';
+    td.appendChild(document.createTextNode(
+      ALL.length ? "No scans match this filter." : "No scans yet — browse a page with the extension enabled."));
+    tr.appendChild(td); body.appendChild(tr); return;
+  }
+
+  for (const e of ev){
+    const b = band(e), key = e.t + "|" + e.url;
+    const cls = b === "phishing" ? "p" : b === "suspicious" ? "s" : "";
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td class="rail ${cls}"></td>`
+    + `<td><span class="verd ${cls}">${b === "phishing" ? "Blocked" : b === "suspicious" ? "Suspicious" : "Allowed"}</span></td>`
+    + `<td class="score">${(e.p*100).toFixed(1)}%</td>`
+    + `<td class="loc"><span class="h">${esc(hostOf(e.url))}</span><span class="p">${esc(pathOf(e.url))}</span></td>`
+    + `<td class="c-sig"><span class="sig">`
+      + ["url","text","visual"].map(m =>
+          `<span class="${(e.modalities||[]).includes(m) ? "on" : ""}">${m}</span>`).join("")
+    + `</span></td>`
+    + `<td class="c-src">${esc(e.decided_by || "—")}</td>`
+    + `<td class="c-lat lat">${e.latency_ms != null ? e.latency_ms.toFixed(0)+" ms" : "—"}</td>`
+    + `<td class="when" title="${esc(new Date(e.t*1000).toLocaleString())}">${fmtAgo(e.t)}</td>`;
+    tr.onclick = () => { open.has(key) ? open.delete(key) : open.add(key); render(); };
+    body.appendChild(tr);
+
+    if (open.has(key)){
+      const d = document.createElement("tr"); d.className = "det";
+      const td = document.createElement("td"); td.colSpan = 8;
+      const reasons = e.reasons || [];
+      if (reasons.length){
+        const ul = document.createElement("ul"); ul.className = "why";
+        for (const r of reasons){ const li = document.createElement("li"); li.textContent = r; ul.appendChild(li); }
+        td.appendChild(ul);
+      } else {
+        const p = document.createElement("div"); p.className = "none";
+        p.textContent = "No feature-level explanation recorded for this scan."; td.appendChild(p);
+      }
+      if (e.gates){
+        const g = document.createElement("div"); g.className = "gates";
+        for (const [k, v] of Object.entries(e.gates)){
+          const s = document.createElement("span");
+          s.innerHTML = `<b>${esc(k)}</b> ${(v*100).toFixed(0)}%`; g.appendChild(s);
+        }
+        td.appendChild(g);
+      }
+      d.appendChild(td); body.appendChild(d);
+    }
+  }
 }
+
+/* ── polling ────────────────────────────────────────────────────────────── */
 async function tick(){
-  let d; try{ d=await (await fetch("/activity?limit=500",{cache:"no-store"})).json(); }
-  catch(e){ const l=document.getElementById("live"); l.className="live off";
-    l.innerHTML='<span class="dot"></span>Server offline'; return; }
-  const l=document.getElementById("live"); l.className="live"; l.innerHTML='<span class="dot"></span>Live';
-  document.getElementById("s-total").textContent=d.stats.total;
-  document.getElementById("s-phish").textContent=d.stats.phishing;
-  document.getElementById("s-legit").textContent=d.stats.legitimate;
-  document.getElementById("s-up").textContent=upt(d.stats.uptime_s);
-  ALL=d.events; render();
+  let d;
+  try { d = await (await fetch("/activity?limit=500", { cache:"no-store" })).json(); }
+  catch { const s = $("#status"); s.className = "status down";
+          s.lastElementChild.textContent = "Server offline"; return; }
+  const s = $("#status"); s.className = "status"; s.lastElementChild.textContent = "Connected";
+
+  const st = d.stats;
+  $("#m-total").textContent = st.total.toLocaleString();
+  $("#m-phish").textContent = st.phishing.toLocaleString();
+  $("#m-pct").textContent   = st.total ? ((st.phishing/st.total)*100).toFixed(1)+"% of traffic" : "";
+  $("#m-up").textContent    = fmtUp(st.uptime_s);
+  $("#m-since").textContent = "since " + new Date(st.since*1000)
+      .toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+  const perMin = st.uptime_s > 0 ? (st.total / (st.uptime_s/60)) : 0;
+  $("#m-rate").textContent = st.total ? perMin.toFixed(1) + "/min" : "";
+
+  ALL = d.events || [];
+  const lats = ALL.map(e => e.latency_ms).filter(v => v != null).sort((a,b) => a-b);
+  $("#m-lat").textContent = lats.length ? lats[Math.floor(lats.length/2)].toFixed(0)+" ms" : "—";
+
+  drawSpark(ALL); render();
 }
-document.getElementById("q").addEventListener("input",e=>{query=e.target.value.toLowerCase().trim();render();});
-document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
-  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
-  c.classList.add("on"); filter=c.dataset.f; render();});
-document.getElementById("export").onclick=()=>{
-  const rowsCsv=[["time","verdict","phishing_probability","decided_by","modalities","url"]]
-    .concat(ALL.map(e=>[new Date(e.t*1000).toISOString(),e.verdict,e.p,e.decided_by||"",
-      (e.modalities||[]).join("|"),(e.url||"").replace(/"/g,'""')]));
-  const csv=rowsCsv.map(r=>r.map(c=>`"${c}"`).join(",")).join(String.fromCharCode(10));
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download="phishnet_activity_"+Date.now()+".csv"; a.click();
-};
+
+/* ── trusted domains ────────────────────────────────────────────────────── */
 async function loadTrusted(){
-  let d; try{ d=await (await fetch("/trusted",{cache:"no-store"})).json(); }catch(e){ return; }
-  const box=document.getElementById("tdoms");
-  box.innerHTML=(d.domains||[]).map(x=>`<span class="tdom"><b>${x}</b><span data-d="${x}">✕</span></span>`).join("")
-    || '<span style="color:var(--faint);font-size:12px">None yet.</span>';
-  box.querySelectorAll("span[data-d]").forEach(el=>el.onclick=async()=>{
-    await fetch("/trusted",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({domain:el.dataset.d})});
-    loadTrusted(); tick();});
+  let d; try { d = await (await fetch("/trusted", { cache:"no-store" })).json(); } catch { return; }
+  const box = $("#doms"); box.textContent = "";
+  const list = d.domains || [];
+  if (!list.length){
+    const n = document.createElement("span"); n.className = "none";
+    n.textContent = "None yet. Add a domain you never want flagged."; box.appendChild(n); return;
+  }
+  for (const dom of list){
+    const w = document.createElement("span"); w.className = "dom";
+    const t = document.createElement("span"); t.textContent = dom;      // no innerHTML
+    const x = document.createElement("button"); x.textContent = "×";
+    x.setAttribute("aria-label", "Remove " + dom);
+    x.onclick = async ev => { ev.stopPropagation();
+      await fetch("/trusted", { method:"DELETE", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ domain: dom }) });
+      loadTrusted(); tick(); };
+    w.append(t, x); box.appendChild(w);
+  }
 }
 async function addTrusted(){
-  const v=document.getElementById("td").value.trim(); if(!v) return;
-  await fetch("/trusted",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({domain:v})});
-  document.getElementById("td").value=""; loadTrusted(); tick();
+  const el = $("#td"), v = el.value.trim(); if (!v) return;
+  await fetch("/trusted", { method:"POST", headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ domain: v }) });
+  el.value = ""; loadTrusted(); tick();
 }
-document.getElementById("tadd").onclick=addTrusted;
-document.getElementById("td").addEventListener("keydown",e=>{if(e.key==="Enter")addTrusted();});
-loadTrusted();
-tick(); setInterval(tick,1500);
+
+/* ── wiring ─────────────────────────────────────────────────────────────── */
+$("#q").addEventListener("input", e => { q = e.target.value.toLowerCase().trim(); render(); });
+$("#seg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  for (const x of $("#seg").children) x.setAttribute("aria-pressed", String(x === b));
+  filt = b.dataset.f; render();
+});
+$("#csv").onclick = () => {
+  const head = ["time","verdict","probability","decided_by","modalities","latency_ms","url"];
+  const q2 = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const csv = [head.map(q2).join(",")].concat(ALL.map(e => [
+      new Date(e.t*1000).toISOString(), e.verdict, e.p, e.decided_by || "",
+      (e.modalities||[]).join("|"), e.latency_ms ?? "", e.url ].map(q2).join(","))).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
+  a.download = "phishnet-activity-" + new Date().toISOString().slice(0,19).replace(/[:T]/g,"") + ".csv";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+$("#tadd").onclick = addTrusted;
+$("#td").addEventListener("keydown", e => { if (e.key === "Enter") addTrusted(); });
+
+loadTrusted(); tick(); setInterval(tick, 2000);
 </script>
 </body></html>
