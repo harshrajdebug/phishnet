@@ -1,0 +1,17 @@
+fastapi==0.141.1
+joblib==1.5.3
+matplotlib==3.11.1
+numpy==2.5.2
+pandas==3.0.5
+pillow==12.3.0
+python-multipart==0.0.32
+scikit-learn==1.9.0
+scipy==1.18.1
+shap==0.52.0
+tldextract==5.3.2
+torch==2.13.0
+torchvision==0.28.0
+transformers==5.15.1
+uvicorn==0.52.4
+pyyaml==6.0.2
+pytest==8.4.2

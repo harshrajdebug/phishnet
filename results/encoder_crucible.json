@@ -1,0 +1,52 @@
+{
+  "baseline": {
+    "margin": 0.44614946842193604,
+    "seen": {
+      "identity": 0.7552083333333334,
+      "colour_shift": 0.13541666666666666,
+      "blur": 0.07291666666666667,
+      "jpeg": 0.14583333333333334,
+      "brightness": 0.13020833333333334,
+      "layout_shift": 0.3541666666666667,
+      "grayscale": 0.16666666666666666,
+      "logo_occlude": 0.5572916666666666,
+      "logo_delete": 0.5677083333333334
+    },
+    "zeroshot": {
+      "identity": 0.8229166666666666,
+      "colour_shift": 0.14583333333333334,
+      "blur": 0.125,
+      "jpeg": 0.16666666666666666,
+      "brightness": 0.16666666666666666,
+      "layout_shift": 0.6458333333333334,
+      "grayscale": 0.23958333333333334,
+      "logo_occlude": 0.75,
+      "logo_delete": 0.6979166666666666
+    }
+  },
+  "cost_weighted_aug": {
+    "margin": 0.561279316743215,
+    "seen": {
+      "identity": 0.5572916666666666,
+      "colour_shift": 0.0625,
+      "blur": 0.0625,
+      "jpeg": 0.0625,
+      "brightness": 0.0625,
+      "layout_shift": 0.296875,
+      "grayscale": 0.0625,
+      "logo_occlude": 0.19791666666666666,
+      "logo_delete": 0.16145833333333334
+    },
+    "zeroshot": {
+      "identity": 0.625,
+      "colour_shift": 0.16666666666666666,
+      "blur": 0.16666666666666666,
+      "jpeg": 0.16666666666666666,
+      "brightness": 0.16666666666666666,
+      "layout_shift": 0.3645833333333333,
+      "grayscale": 0.16666666666666666,
+      "logo_occlude": 0.2708333333333333,
+      "logo_delete": 0.23958333333333334
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "n_seen": 59,
+  "n_zeroshot": 19,
+  "chance": 0.01694915254237288,
+  "n_gallery": 1272,
+  "n_query": 1285,
+  "control_per_attack": {
+    "identity": 0.7167315175097276,
+    "colour_shift": 0.6848249027237354,
+    "blur": 0.466147859922179,
+    "jpeg": 0.7151750972762646,
+    "brightness": 0.691828793774319,
+    "layout_shift": 0.6505836575875487,
+    "grayscale": 0.4972762645914397,
+    "logo_occlude": 0.5610894941634241,
+    "logo_delete": 0.2607003891050584
+  },
+  "control_clean": 0.7167315175097276,
+  "control_cheap_mean": 0.617639429312581,
+  "control_clean_skill": 0.7118475781564471,
+  "control_cheap_skill": 0.6110470056800393,
+  "split_leakage_passed": true,
+  "split_leakage_seen": {
+    "n_query": 1285,
+    "n_duplicated": 2,
+    "dup_frac": 0.0015564202334630351
+  },
+  "split_leakage_zeroshot": {
+    "n_query": 305,
+    "n_duplicated": 0,
+    "dup_frac": 0.0
+  },
+  "corpus_validity_passed": true,
+  "corpus_validity_reasons": [
+    "attack ordering is realistic: brand-mark removal (0.411) hurts at least as much as photometric perturbation (0.611)"
+  ]
+}

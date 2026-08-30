@@ -1,0 +1,30 @@
+# heavy local corpus (3.3 GB; regenerate via scripts/harvest_phishpedia.py)
+# leading slash is required: a bare `data/` also matches phishnet/data/,
+# which is a source package, not the corpus
+/data/
+
+# environment
+.venv/
+__pycache__/
+*.pyc
+
+# model weights and large binaries (regenerate by running the eval modules)
+results/*.pt
+results/*.npz
+results/*.joblib
+
+# render intermediates (rebuild: scripts/build_paper.py)
+paper/*.pdf
+paper/*.html
+proposal/*.pdf
+
+# run logs
+results/*.log
+results/*.done
+
+.DS_Store
+
+# release outputs (generated from the tag; tracking them makes the archive
+# contain a stale copy of itself)
+phisharmor-artifact.tar.gz
+phisharmor-artifact.tar.gz.sha256

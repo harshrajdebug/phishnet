@@ -1,0 +1,630 @@
+<!doctype html><html><head><meta charset='utf-8'><style>
+@page { size: A4; margin: 20mm 18mm; }
+* { box-sizing: border-box; }
+body { font-family: "Georgia","Times New Roman",serif; font-size: 10.5pt;
+       line-height: 1.5; color: #111; }
+h1 { font-size: 20pt; line-height: 1.2; text-align: center; margin: 0 0 6pt; }
+h2 { font-size: 13.5pt; margin: 20pt 0 6pt; border-bottom: 1px solid #ccc; padding-bottom: 3pt; }
+h3 { font-size: 11.5pt; margin: 14pt 0 4pt; color: #1a1a1a; }
+p { margin: 0 0 8pt; text-align: justify; }
+code { font-family: "SF Mono","Consolas",monospace; font-size: 8.6pt;
+       background: #f4f4f4; padding: 0.5pt 3pt; border-radius: 3px; }
+pre { background: #f7f8fa; border: 1px solid #e2e6ea; padding: 9pt; border-radius: 5px;
+      overflow-x: auto; font-size: 7.6pt; line-height: 1.35; }
+pre code { background: 0; padding: 0; font-size: inherit; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0 12pt; font-size: 9pt; }
+th, td { border: 1px solid #bbb; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+th { background: #eef1f4; font-family: Helvetica, Arial, sans-serif; }
+img { max-width: 100%; display: block; margin: 8pt auto; }
+a { color: #0b5; text-decoration: none; word-break: break-all; }
+strong { color: #000; }
+ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+li { margin: 2pt 0; }
+hr { border: 0; border-top: 1px solid #ccc; margin: 14pt 0; }
+h1, h2, h3 { page-break-after: avoid; }
+table, pre { page-break-inside: avoid; }
+</style></head><body><h1>PhishArmor: Cost-Aware Adversarial Robustness for Phishing Webpage Detection</h1>
+<p><strong>A Research Proposal</strong></p>
+<p><strong>Harsh Raj, Aryan Kumar, Ayush Prajapati, Ujjawal Jain</strong>
+School of Computer Science, University of Petroleum and Energy Studies, Dehradun, India
+Mentor: Dr. Swati Rastogi</p>
+<hr />
+<h2>Executive Summary</h2>
+<p>Visual phishing detectors published at top security venues collapse to near-zero
+detection under manipulations an attacker can apply for free. Deleting the brand
+logo drives PhishIntention to <strong>0%</strong> detection; changing a font drives it to
+<strong>2.15%</strong>; a gradient-based perturbation to <strong>3.64%</strong> [1]. A parallel line of work
+shows that <strong>over 80% of successful evasions concentrate on just three low-cost
+features</strong>, meaning robustness is governed by the economics of the attack surface
+rather than by model capacity [2]. Meanwhile the newest state-of-the-art system,
+PhishAgent (AAAI 2025), evaluates robustness only against prompt injection and
+typosquatting, explicitly setting visual attacks aside as <em>&quot;less common due to
+their visibility&quot;</em> [3] — an assumption the evidence in [1] contradicts.</p>
+<p>The field has produced many attacks and <strong>no defence</strong>. The authors of [1] state
+the gap directly: there is <em>no defence against coordinated manipulation of logos,
+layouts, and textual content simultaneously.</em></p>
+<p><strong>PhishArmor</strong> proposes to fill it. The central claim is that a detector's
+robustness is determined not by its capacity but by <em>which features it relies on,
+weighted by what those features cost an attacker to forge</em>. We contribute (i) a
+formal attacker-cost model that prices each evasion in money, effort <strong>and lost
+victim conversion</strong>; (ii) a defence combining cost-weighted adversarial training
+with a penalty on reliance upon cheap features; and (iii) <strong>RobustPhishBench</strong>, the
+first cost-parameterised robustness benchmark evaluating Phishpedia,
+PhishIntention, PhishAgent and PhishArmor on equal terms, reporting a new metric —
+<strong>median cost-to-evade</strong> — in place of the conventional robust-accuracy-at-epsilon.</p>
+<hr />
+<h2>1. Background and Motivation</h2>
+<p>Phishing remains the dominant initial-access vector, and the detection literature
+has converged on three families:</p>
+<table>
+<thead>
+<tr>
+<th>Family</th>
+<th>Representatives</th>
+<th>Weakness under attack</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reference-based visual</td>
+<td>Phishpedia, PhishIntention</td>
+<td>Depends on logo presence and appearance</td>
+</tr>
+<tr>
+<td>Screenshot similarity</td>
+<td>VisualPhishNet, EMD</td>
+<td>Brand identification 7–26% on real data</td>
+</tr>
+<tr>
+<td>Multimodal / agentic</td>
+<td>PhishAgent, KnowPhish</td>
+<td>Untested against visual manipulation</td>
+</tr>
+</tbody>
+</table>
+<p>Every family shares an unexamined assumption: that the visual and structural
+signals it reads are <em>stable</em>. An adversary chooses those signals. The question
+that matters operationally is therefore not &quot;how accurate is the detector on a
+static benchmark&quot; but <strong>&quot;what does it cost an attacker to make this detector
+wrong, and can we raise that price?&quot;</strong></p>
+<h3>1.1 Why the assumption fails</h3>
+<p>The robustness evaluation in [1] applies thirteen visible manipulations plus
+white- and black-box perturbations to three logo-based and two screenshot-based
+detectors. The results are not graceful degradation; they are collapse:</p>
+<table>
+<thead>
+<tr>
+<th>Attack</th>
+<th>Effect on PhishIntention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Logo deletion</td>
+<td>detection → <strong>0%</strong></td>
+</tr>
+<tr>
+<td>Font change</td>
+<td>detection → <strong>2.15%</strong></td>
+</tr>
+<tr>
+<td>Location shift</td>
+<td>detection → <strong>2.73%</strong></td>
+</tr>
+<tr>
+<td>PGD / FGSM (white-box)</td>
+<td>detection → <strong>3.64%</strong></td>
+</tr>
+<tr>
+<td>Unseen brands</td>
+<td><strong>13–18%</strong> absolute drop</td>
+</tr>
+<tr>
+<td>Real-world vs curated data</td>
+<td><strong>20.7%</strong> decline</td>
+</tr>
+</tbody>
+</table>
+<h3>1.2 Why no defence exists yet</h3>
+<p>Three structural reasons, each of which our design addresses:</p>
+<ol>
+<li><strong>Attacks are cheaper to publish than defences.</strong> Generating an adversarial
+logo is a weekend project; a defence must hold across attack families.</li>
+<li><strong>Robust-accuracy-at-epsilon does not fit this threat model.</strong> An <code>L∞</code> ball is
+the wrong abstraction for &quot;delete the logo&quot; or &quot;shorten the URL&quot;. Without a
+metric that captures <em>semantic</em> attacks, defences cannot be compared.</li>
+<li><strong>Reference-based detectors have no training loop to harden.</strong> Phishpedia is
+deliberately not trained on phishing data, so standard adversarial training
+does not apply to it. A defence must therefore operate at the <em>representation</em>
+and <em>fusion</em> level, not only at the classifier.</li>
+</ol>
+<hr />
+<h2>2. Research Gap and Questions</h2>
+<p><strong>Gap.</strong> No published defence addresses coordinated, semantic, low-cost
+manipulation of phishing webpages, and no benchmark prices attacks by what they
+cost the adversary.</p>
+<p>We ask:</p>
+<ul>
+<li><strong>RQ1</strong> — Can evasions be assigned a principled cost that predicts which
+attacks adversaries actually use in the wild?</li>
+<li><strong>RQ2</strong> — Does training a detector with perturbations sampled <em>inversely
+proportional to attacker cost</em> yield greater robustness per unit of clean
+accuracy lost than uniform adversarial training?</li>
+<li><strong>RQ3</strong> — Does explicitly penalising reliance on cheap features raise the
+median cost-to-evade without a proportional loss of clean performance?</li>
+<li><strong>RQ4</strong> — Under a unified cost-parameterised attack suite, how do Phishpedia,
+PhishIntention, PhishAgent and PhishArmor compare?</li>
+</ul>
+<p><strong>Hypothesis.</strong> Robustness follows feature economics. A detector regularised away
+from cheap features will trade a small amount of clean accuracy for a large
+increase in cost-to-evade, and this trade will dominate uniform adversarial
+training on the robustness–accuracy frontier.</p>
+<hr />
+<h2>3. Proposed Approach</h2>
+<h3>3.1 The attacker-cost model</h3>
+<p>Each evasion <code>a</code> receives a cost vector <code>c(a) = (c_money, c_effort, c_conversion)</code>:</p>
+<ul>
+<li><strong>c_money</strong> — registration, hosting, certificates, proxy or residential IP rental</li>
+<li><strong>c_effort</strong> — engineering time and skill, whether kit-automatable</li>
+<li><strong>c_conversion</strong> — <em>the novel axis</em>: how much the manipulation reduces the
+victim's likelihood of being deceived. Deleting the brand logo defeats a
+logo-based detector at zero monetary cost but also removes the visual cue the
+victim relies on, so the attack is partly self-defeating.</li>
+</ul>
+<p>Scalar cost is a weighted sum, <code>cost(a) = wᵀc(a)</code>, with <code>w</code> calibrated against
+observed frequencies in live feeds (OpenPhish, Phishing.Database) — an attack that
+is cheap under the model should be common in the wild. <strong>That calibration is
+RQ1's falsifiable test.</strong></p>
+<h3>3.2 Defence mechanism 1 — cost-weighted adversarial training</h3>
+<p>Rather than sampling perturbations uniformly, sample the attack applied to each
+training example with probability inversely proportional to its cost:</p>
+<pre><code>P(a) ∝ exp( −cost(a) / τ )
+
+for (x, y) in loader:
+    a      ← sample_attack(P)          # cheap attacks dominate
+    x_adv  ← a(x)
+    loss   ← CE( f(x_adv), y ) + λ · reliance_penalty(f, x)
+</code></pre>
+<p>The temperature <code>τ</code> interpolates between uniform adversarial training (<code>τ → ∞</code>)
+and training exclusively on the single cheapest attack (<code>τ → 0</code>), giving a clean
+ablation axis.</p>
+<h3>3.3 Defence mechanism 2 — cheap-feature reliance penalty</h3>
+<p>Robustness is a property of <em>what the model attends to</em>. We penalise input-gradient
+mass on features that are cheap to manipulate:</p>
+<pre><code>g              = ∂f(x) / ∂x
+reliance_penalty = Σᵢ  (1 / cost(featureᵢ)) · gᵢ²
+</code></pre>
+<p>This pushes the decision onto expensive invariants — domain registration and
+infrastructure characteristics, TLS and hosting provenance, and cross-modal
+consistency between the rendered brand identity and the serving domain, which an
+attacker cannot forge without actually controlling the brand's domain.</p>
+<h3>3.4 Defence mechanism 3 — expensive-invariant anchored fusion</h3>
+<p>Our prior work established that a benign-looking modality can <em>veto</em> a malicious
+one when fusion is trained on class-consistent data. PhishArmor generalises the
+fix: the fusion layer is trained so that <strong>the cheapest modality can never
+override the most expensive one</strong>, enforced by a monotonicity constraint on the
+gate assigned to low-cost modalities.</p>
+<h3>3.5 RobustPhishBench and the cost-to-evade metric</h3>
+<p>We replace robust-accuracy-at-epsilon with an economically meaningful metric:</p>
+<pre><code>CTE(model, x) = min { cost(a) : model( a(x) ) = benign }
+</code></pre>
+<p>The <strong>median cost-to-evade</strong> across a test set, and the full CTE distribution,
+answer the question a defender actually has: <em>how much must an adversary spend to
+get past this system?</em> We report CTE alongside conventional metrics so results
+remain comparable to prior work.</p>
+<hr />
+<h2>4. Implementation Architecture</h2>
+<h3>4.1 System overview</h3>
+<pre><code>                        ┌───────────────────────────────┐
+                        │        DATA LAYER             │
+                        │  Phishpedia 30k (real shots)  │
+                        │  PhishIntention 50k pages     │
+                        │  OpenPhish live feed          │
+                        │  Tranco benign + deep links   │
+                        └───────────────┬───────────────┘
+                                        │
+        ┌───────────────────────────────┼───────────────────────────────┐
+        │                               │                               │
+┌───────▼────────┐           ┌──────────▼─────────┐          ┌──────────▼────────┐
+│   COST MODEL   │           │   ATTACK SUITE     │          │  DETECTOR ZOO     │
+│ taxonomy.py    │──prices──▶│ visual.py          │─attacks─▶│ phishpedia_wrap   │
+│ estimator.py   │           │ perturbation.py    │          │ phishintention_wr │
+│ conversion.py  │           │ html.py / url.py   │          │ phishagent_wrap   │
+│                │           │ compose.py (multi) │          │ phisharmor.py     │
+└───────┬────────┘           └──────────┬─────────┘          └──────────┬────────┘
+        │                               │                               │
+        │  P(a) ∝ exp(−cost/τ)          │                               │
+        └───────────────┬───────────────┘                               │
+                        │                                               │
+              ┌─────────▼──────────┐                          ┌─────────▼────────┐
+              │   DEFENCE TRAINER  │                          │  BENCH RUNNER    │
+              │ cost_weighted_at   │─────── trains ──────────▶│ runner.py        │
+              │ reliance_penalty   │                          │ metrics.py (CTE) │
+              │ anchor_fusion      │                          │ report.py        │
+              └────────────────────┘                          └─────────┬────────┘
+                                                                        │
+                                                              ┌─────────▼────────┐
+                                                              │ RESULTS          │
+                                                              │ CTE curves,      │
+                                                              │ robustness       │
+                                                              │ frontier, CIs    │
+                                                              └──────────────────┘
+</code></pre>
+<h3>4.2 Repository structure</h3>
+<pre><code>phisharmor/
+├── configs/
+│   ├── default.yaml               # paths, seeds, hyper-parameters
+│   ├── cost_weights.yaml          # w for (money, effort, conversion)
+│   └── attacks.yaml               # attack registry + parameters
+├── phisharmor/
+│   ├── cost/
+│   │   ├── taxonomy.py            # Evasion enum + cost vectors
+│   │   ├── estimator.py           # cost(a) -&gt; scalar; calibration to feed data
+│   │   └── conversion.py          # victim-conversion penalty model
+│   ├── attacks/
+│   │   ├── base.py                # Attack protocol: apply(sample) -&gt; sample
+│   │   ├── visual.py              # logo delete/blur/shift/recolour/font swap
+│   │   ├── perturbation.py        # FGSM, PGD, black-box ViT transfer
+│   │   ├── html.py                # DOM mutation, prompt injection, obfuscation
+│   │   ├── url.py                 # shortener, TLD swap, homoglyph, padding
+│   │   └── compose.py             # coordinated multi-component attacks
+│   ├── defense/
+│   │   ├── cost_weighted_at.py    # sampler + training loop
+│   │   ├── reliance_penalty.py    # input-gradient regulariser
+│   │   └── anchor_fusion.py       # monotone gate constraint
+│   ├── models/
+│   │   ├── base.py                # Detector protocol (uniform interface)
+│   │   ├── phishpedia_wrap.py     # subprocess/API adapter
+│   │   ├── phishintention_wrap.py
+│   │   ├── phishagent_wrap.py
+│   │   └── phisharmor.py          # our detector (extends PhishNet)
+│   ├── bench/
+│   │   ├── runner.py              # orchestration, caching, resumability
+│   │   ├── metrics.py             # CTE, robust acc, frontier, bootstrap CI
+│   │   └── report.py              # tables + figures
+│   └── data/
+│       ├── loaders.py             # Phishpedia / PhishIntention adapters
+│       └── splits.py              # brand-disjoint + domain-disjoint splits
+├── scripts/
+│   ├── fetch_benchmarks.sh        # pull 30k/50k datasets + weights
+│   ├── run_bench.py
+│   └── train_defense.py
+├── tests/
+└── paper/
+</code></pre>
+<h3>4.3 The uniform detector interface</h3>
+<p>Every detector — ours and each baseline — is wrapped behind one protocol, so the
+benchmark treats them identically and adding a future system costs one file:</p>
+<pre><code class="language-python">class Detector(Protocol):
+    name: str
+    def predict(self, sample: Sample) -&gt; Verdict:
+        &quot;&quot;&quot;Sample carries url, html, screenshot; Verdict carries
+        label, score, and optionally the identified target brand.&quot;&quot;&quot;
+</code></pre>
+<p><code>Sample</code> is the single currency of the system: attacks map <code>Sample → Sample</code>,
+detectors map <code>Sample → Verdict</code>. This keeps attacks, detectors and metrics fully
+decoupled and independently testable.</p>
+<h3>4.4 Key algorithm — cost-to-evade search</h3>
+<p>CTE is a constrained minimisation over a discrete attack space, solved greedily
+with a cost-ordered frontier (exact for single attacks, near-optimal for
+compositions):</p>
+<pre><code>def cost_to_evade(model, sample, attacks, budget):
+    frontier = PriorityQueue()            # ordered by cumulative cost
+    frontier.push(cost=0, applied=[], s=sample)
+    seen = set()
+    while frontier and frontier.peek().cost &lt;= budget:
+        node = frontier.pop()
+        if model.predict(node.s).label == &quot;benign&quot;:
+            return node.cost, node.applied      # cheapest successful evasion
+        for a in attacks:
+            if a in node.applied: continue      # no repeats
+            child = a.apply(node.s)
+            frontier.push(node.cost + cost(a), node.applied + [a], child)
+    return budget, None                          # censored observation
+</code></pre>
+<p>Runs that exhaust the budget are recorded as <strong>censored</strong>, and the CTE
+distribution is estimated with survival analysis (Kaplan–Meier) rather than by
+discarding them — this avoids the bias that would arise from dropping the most
+robust samples.</p>
+<h3>4.5 Technology stack</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modelling</td>
+<td>PyTorch 2.x + torchvision</td>
+<td>Baselines are PyTorch; MPS/CUDA portable</td>
+</tr>
+<tr>
+<td>Detector baselines</td>
+<td>Phishpedia, PhishIntention (official repos)</td>
+<td>Reproducibility; both ship CPU setup</td>
+</tr>
+<tr>
+<td>Eval scaffolding</td>
+<td>PhishingEval harness</td>
+<td>Existing multi-detector evaluation code</td>
+</tr>
+<tr>
+<td>Vision backbones</td>
+<td>ResNet-18/50, ViT-B/16</td>
+<td>Matches baselines; ViT for transfer attacks</td>
+</tr>
+<tr>
+<td>Text</td>
+<td>DistilBERT / MobileBERT</td>
+<td>Latency budget for client-side operation</td>
+</tr>
+<tr>
+<td>Attacks</td>
+<td>torchattacks + custom semantic ops</td>
+<td>Standard <code>Lp</code> attacks plus our semantic suite</td>
+</tr>
+<tr>
+<td>Rendering</td>
+<td>Playwright (headless Chromium)</td>
+<td>Deterministic screenshots for manipulated DOM</td>
+</tr>
+<tr>
+<td>Statistics</td>
+<td>scipy, lifelines</td>
+<td>Bootstrap CIs and censored CTE estimation</td>
+</tr>
+<tr>
+<td>Orchestration</td>
+<td>Hydra configs, DVC or plain manifests</td>
+<td>Reproducible sweeps</td>
+</tr>
+</tbody>
+</table>
+<h3>4.6 Reuse from existing PhishNet work</h3>
+<p>A substantial fraction of the scaffolding already exists and transfers directly:</p>
+<table>
+<thead>
+<tr>
+<th>Existing asset</th>
+<th>Role in PhishArmor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adversarial evaluation harness (six URL transforms)</td>
+<td>Seeds <code>attacks/url.py</code></td>
+</tr>
+<tr>
+<td>Multimodal fusion with gating and modality dropout</td>
+<td>Base for <code>anchor_fusion.py</code></td>
+</tr>
+<tr>
+<td>Domain-disjoint splitting, bootstrap CIs, multi-seed protocol</td>
+<td><code>bench/metrics.py</code> discipline</td>
+</tr>
+<tr>
+<td>Cross-class assembly fix for the text-veto failure</td>
+<td>Precursor to §3.4; a motivating result</td>
+</tr>
+<tr>
+<td>Live OpenPhish / Tranco ingestion</td>
+<td>Cost-model calibration data</td>
+</tr>
+<tr>
+<td>FastAPI serving + activity dashboard</td>
+<td>Field-study instrumentation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Experimental Design</h2>
+<h3>5.1 Datasets</h3>
+<table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Scale</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phishpedia benchmark</td>
+<td>30k phishing + 30k benign, real screenshots</td>
+<td>Primary evaluation</td>
+</tr>
+<tr>
+<td>PhishIntention</td>
+<td>~50k webpages</td>
+<td>Cross-dataset generalisation</td>
+</tr>
+<tr>
+<td>OpenPhish + Phishing.Database</td>
+<td>live, continuous</td>
+<td>Cost-model calibration, temporal drift</td>
+</tr>
+<tr>
+<td>Tranco + harvested deep links</td>
+<td>200k</td>
+<td>Benign control, false-positive measurement</td>
+</tr>
+</tbody>
+</table>
+<p>Splits are <strong>brand-disjoint</strong> (no brand in both train and test) as well as
+domain-disjoint, so zero-shot brand robustness is measured honestly.</p>
+<h3>5.2 Baselines</h3>
+<p>Phishpedia, PhishIntention, VisualPhishNet, PhishAgent, plus URL-only references
+(URLNet, Random Forest on lexical features) for the URL attack family.</p>
+<h3>5.3 Metrics</h3>
+<ul>
+<li><strong>Clean</strong> — accuracy, precision, recall, F1, ROC-AUC, PR-AUC</li>
+<li><strong>Robust</strong> — detection rate under each attack family, and under composition</li>
+<li><strong>Economic</strong> — median cost-to-evade, CTE survival curves, cost-at-90%-evasion</li>
+<li><strong>Trade-off</strong> — the clean-accuracy / CTE frontier as <code>λ</code> and <code>τ</code> vary</li>
+<li><strong>Deployment</strong> — false-positive rate at a realistic base rate; latency</li>
+</ul>
+<p>All headline numbers carry <strong>bootstrap 95% confidence intervals</strong> and are reported
+across <strong>≥ 5 seeds</strong>, following the protocol already established in our prior work.</p>
+<h3>5.4 Ablations</h3>
+<p>Cost weighting on/off · reliance penalty on/off · <code>λ</code> sweep · <code>τ</code> sweep · each
+cost axis removed in turn (notably <code>c_conversion</code>, to test whether the novel term
+earns its place) · anchored fusion on/off.</p>
+<hr />
+<h2>6. Timeline</h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Weeks</th>
+<th>Deliverable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 — Setup</td>
+<td>1–3</td>
+<td>Baselines reproduced; benchmark data pulled; detector wrappers pass smoke tests</td>
+</tr>
+<tr>
+<td>1 — Cost model + attacks</td>
+<td>4–10</td>
+<td>Attack suite implemented; cost model calibrated against live-feed frequencies (<strong>RQ1</strong>)</td>
+</tr>
+<tr>
+<td>2 — Defence</td>
+<td>11–22</td>
+<td>Cost-weighted AT, reliance penalty, anchored fusion; ablations (<strong>RQ2, RQ3</strong>)</td>
+</tr>
+<tr>
+<td>3 — Benchmark</td>
+<td>23–30</td>
+<td>RobustPhishBench across all detectors; CTE curves; CIs (<strong>RQ4</strong>)</td>
+</tr>
+<tr>
+<td>4 — Writing</td>
+<td>31–36</td>
+<td>Manuscript, artefact release, submission</td>
+</tr>
+</tbody>
+</table>
+<p>Phases 1 and 2 overlap deliberately: the attack suite must be stable before the
+defence trains against it, but cost calibration can continue in parallel.</p>
+<hr />
+<h2>7. Risks and Mitigations</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Likelihood</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adversarial training costs too much clean accuracy</td>
+<td>High</td>
+<td>Report the frontier honestly; the contribution is the <em>shape</em> of the trade-off, not a free lunch</td>
+</tr>
+<tr>
+<td>Baseline reproduction (PhishIntention) proves brittle</td>
+<td>Medium</td>
+<td>Use the PhishingEval harness; failing that, report on the baselines that do reproduce and document the rest</td>
+</tr>
+<tr>
+<td>A competing defence is published mid-project</td>
+<td>Medium</td>
+<td>RobustPhishBench and the CTE metric stand independently; pivot emphasis to the benchmark</td>
+</tr>
+<tr>
+<td>Compute limits at 30k-scale adversarial training</td>
+<td>Medium</td>
+<td>Subsample with stratification; free Colab/Kaggle GPU; cache attacked samples on disk</td>
+</tr>
+<tr>
+<td>Cost model judged arbitrary by reviewers</td>
+<td>Medium</td>
+<td>Calibrate against observed wild frequencies and publish the calibration as a falsifiable test</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>8. Expected Contributions</h2>
+<ol>
+<li><strong>The first defence</strong> against coordinated, low-cost, semantic manipulation of
+phishing webpages — filling a gap stated explicitly in [1].</li>
+<li><strong>A formal attacker-cost model</strong> including victim-conversion cost, calibrated
+against live phishing telemetry.</li>
+<li><strong>Cost-to-evade</strong>, an economically meaningful robustness metric with censored
+estimation, replacing robust-accuracy-at-epsilon for semantic threat models.</li>
+<li><strong>RobustPhishBench</strong>, a reusable open benchmark evaluating four detector
+families on equal terms.</li>
+<li>An <strong>empirical correction</strong> to the assumption in [3] that visual attacks are
+impractical.</li>
+</ol>
+<h3>Target venues</h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Venue</th>
+<th>Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q1 journal</td>
+<td><em>Computers &amp; Security</em> (Elsevier)</td>
+<td>Strong — systems + evaluation focus</td>
+</tr>
+<tr>
+<td>Q1 journal</td>
+<td><em>IEEE TIFS</em> / <em>TDSC</em></td>
+<td>Strong if the defence result is decisive</td>
+</tr>
+<tr>
+<td>A* conference</td>
+<td>USENIX Security, ACM CCS</td>
+<td>Reach; the benchmark strengthens the case</td>
+</tr>
+<tr>
+<td>Fallback</td>
+<td><em>DTRAP</em>, ESORICS, DIMVA</td>
+<td>Solid, realistic</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>9. Resources Required</h2>
+<ul>
+<li><strong>Compute</strong> — one CUDA GPU (16 GB) for adversarial training at full scale; the
+Apple-silicon development machine suffices for the pipeline and reduced-scale runs</li>
+<li><strong>Storage</strong> — ~150 GB for benchmark datasets, cached attacked samples, checkpoints</li>
+<li><strong>Data access</strong> — all datasets are public; no partnership required</li>
+<li><strong>Ethics</strong> — no live phishing pages are served or visited; all manipulation is
+applied offline to archived samples. No human-subject data is collected.</li>
+</ul>
+<hr />
+<h2>References</h2>
+<p>[1] Evaluating the Effectiveness and Robustness of Visual Similarity-based
+Phishing Detection Models, 2024. arXiv:2405.19598</p>
+<p>[2] Robustness, Cost, and Attack-Surface Concentration in Phishing Detection,
+2026. arXiv:2603.19204</p>
+<p>[3] Cao et al., PhishAgent: A Robust Multimodal Agent for Phishing Webpage
+Detection, AAAI 2025. arXiv:2408.10738</p>
+<p>[4] Lin et al., Phishpedia: A Hybrid Deep Learning Based Approach to Visually
+Identify Phishing Webpages, USENIX Security 2021.</p>
+<p>[5] Liu et al., Inferring Phishing Intention via Webpage Appearance and Dynamics
+(PhishIntention), USENIX Security 2022.</p>
+<p>[6] Abdelnabi et al., VisualPhishNet: Zero-Day Phishing Website Detection by
+Visual Similarity, ACM CCS 2020.</p>
+<p>[7] Zhang et al., CrawlPhish: Large-scale Analysis of Client-side Cloaking
+Techniques in Phishing, IEEE S&amp;P 2021.</p>
+<p>[8] Attacking Logo-Based Phishing Website Detectors with Adversarial
+Perturbations, ESORICS 2023.</p>
+<p>[9] PhishOracle: Generating Adversarial Phishing Web Pages, 2024.</p>
+<p>[10] From ML to LLM: Evaluating the Robustness of Phishing Web Page Detection
+Models against Adversarial Attacks, ACM DTRAP, 2025.</p>
+</body></html>

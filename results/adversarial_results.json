@@ -1,0 +1,29 @@
+{
+  "_baseline_detection": 0.9567,
+  "_n": 4000,
+  "_threshold": 0.9033,
+  "https_upgrade": {
+    "detection_after": 0.977,
+    "evasion_rate": 0.023
+  },
+  "benign_padding": {
+    "detection_after": 0.9799,
+    "evasion_rate": 0.0201
+  },
+  "hyphen_brand": {
+    "detection_after": 0.9969,
+    "evasion_rate": 0.0031
+  },
+  "homoglyph": {
+    "detection_after": 0.9417,
+    "evasion_rate": 0.0583
+  },
+  "shortener_wrap": {
+    "detection_after": 0.7324,
+    "evasion_rate": 0.2676
+  },
+  "tld_swap": {
+    "detection_after": 0.9979,
+    "evasion_rate": 0.0021
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "PhishNet — Automatic Phishing Guard",
+  "version": "2.0.0",
+  "description": "Runs continuously, scans every page you visit with the local multimodal model, and blocks phishing automatically.",
+  "permissions": ["scripting", "webNavigation", "storage", "tabs", "activeTab"],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*",
+    "<all_urls>"
+  ],
+  "background": { "service_worker": "src/background.js" },
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "PhishNet",
+    "default_icon": { "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": { "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ]
+}

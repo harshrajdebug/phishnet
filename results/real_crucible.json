@@ -1,0 +1,52 @@
+{
+  "baseline": {
+    "margin": 0.326743945479393,
+    "seen": {
+      "identity": 0.298936170212766,
+      "colour_shift": 0.009574468085106383,
+      "blur": 0.006382978723404255,
+      "jpeg": 0.012765957446808512,
+      "brightness": 0.00851063829787234,
+      "layout_shift": 0.02234042553191489,
+      "grayscale": 0.0425531914893617,
+      "logo_occlude": 0.007446808510638297,
+      "logo_delete": 0.002127659574468085
+    },
+    "zeroshot": {
+      "identity": 0.3975,
+      "colour_shift": 0.025,
+      "blur": 0.015,
+      "jpeg": 0.0225,
+      "brightness": 0.02,
+      "layout_shift": 0.07500000000000001,
+      "grayscale": 0.0625,
+      "logo_occlude": 0.01,
+      "logo_delete": 0.01
+    }
+  },
+  "cost_weighted_aug": {
+    "margin": 0.4063613563776016,
+    "seen": {
+      "identity": 0.08936170212765956,
+      "colour_shift": 0.005319148936170213,
+      "blur": 0.00425531914893617,
+      "jpeg": 0.00425531914893617,
+      "brightness": 0.005319148936170213,
+      "layout_shift": 0.04042553191489362,
+      "grayscale": 0.019148936170212766,
+      "logo_occlude": 0.009574468085106383,
+      "logo_delete": 0.00851063829787234
+    },
+    "zeroshot": {
+      "identity": 0.11750000000000001,
+      "colour_shift": 0.01,
+      "blur": 0.01,
+      "jpeg": 0.01,
+      "brightness": 0.01,
+      "layout_shift": 0.0675,
+      "grayscale": 0.0125,
+      "logo_occlude": 0.02,
+      "logo_delete": 0.0125
+    }
+  }
+}

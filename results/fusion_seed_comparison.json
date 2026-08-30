@@ -1,0 +1,58 @@
+{
+  "n_runs": 4,
+  "cross_attention": {
+    "f1_mean": 0.99485,
+    "f1_std": 0.0029278831943914735,
+    "fpr_mean": 0.009774999999999999,
+    "fpr_std": 0.008597492366963753
+  },
+  "concat": {
+    "f1_mean": 0.9944,
+    "f1_std": 0.0007968688725254642,
+    "fpr_mean": 0.007425,
+    "fpr_std": 0.003495264653785175
+  },
+  "cross_wins": 2,
+  "runs": {
+    "run_initial": {
+      "cross_attention": {
+        "f1": 0.9983,
+        "fpr": 0.0021
+      },
+      "concat": {
+        "f1": 0.9944,
+        "fpr": 0.0116
+      }
+    },
+    "run_retrain": {
+      "cross_attention": {
+        "f1": 0.9953,
+        "fpr": 0.0116
+      },
+      "concat": {
+        "f1": 0.9957,
+        "fpr": 0.0021
+      }
+    },
+    "seed_1": {
+      "cross_attention": {
+        "f1": 0.9902,
+        "fpr": 0.0231
+      },
+      "concat": {
+        "f1": 0.9937,
+        "fpr": 0.0069
+      }
+    },
+    "seed_2": {
+      "cross_attention": {
+        "f1": 0.9956,
+        "fpr": 0.0023
+      },
+      "concat": {
+        "f1": 0.9938,
+        "fpr": 0.0091
+      }
+    }
+  }
+}

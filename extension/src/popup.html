@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  :root{color-scheme:light dark}
+  body{width:320px;margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:#0f1620;color:#e7eef4}
+  .hd{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #22303c}
+  .hd b{font-size:15px} .dot{width:8px;height:8px;border-radius:50%;margin-left:auto}
+  .up{background:#37c46b}.down{background:#e0574a}
+  .body{padding:16px}
+  .verdict{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .phish{color:#ff6b5c}.legit{color:#48c98a}.warn{color:#e6b35c}
+  .sub{color:#9db0bd;font-size:12px;margin:2px 0 12px;word-break:break-all}
+  .gates{display:flex;gap:6px;margin:10px 0}
+  .g{flex:1;background:#16232e;border-radius:8px;padding:8px;text-align:center}
+  .g .k{font-size:9px;color:#7d8f9c;text-transform:uppercase;letter-spacing:.05em}
+  .g .v{font-size:15px;font-weight:600}
+  ul{margin:8px 0 0;padding-left:18px;font-size:13px;color:#c7d2da}li{margin:3px 0}
+  .row{display:flex;align-items:center;justify-content:space-between;margin:12px 0 0;
+    padding-top:12px;border-top:1px solid #22303c;font-size:13px}
+  .toggle{position:relative;width:38px;height:22px;background:#33434f;border-radius:12px;cursor:pointer}
+  .toggle.on{background:#0b7285}.knob{position:absolute;top:3px;left:3px;width:16px;height:16px;
+    background:#fff;border-radius:50%;transition:.15s}.toggle.on .knob{left:19px}
+  button.re{width:100%;margin-top:12px;background:#0b7285;color:#fff;border:0;border-radius:9px;
+    padding:10px;font-size:13px;font-weight:600;cursor:pointer}
+  .off{color:#e0574a;font-size:12px;padding:12px 16px}
+  code{background:#16232e;padding:1px 5px;border-radius:4px;font-size:11px}
+</style></head>
+<body>
+  <div class="hd"><span>🛡️</span><b>PhishNet</b><span id="status" class="dot down"></span></div>
+  <div id="app" class="body">Loading…</div>
+  <script src="popup.js"></script>
+</body></html>

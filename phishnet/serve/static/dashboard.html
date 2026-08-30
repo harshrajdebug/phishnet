@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PhishNet — Live Activity</title>
+<style>
+  :root{--bg:#0d151d;--surface:#131f29;--panel:#18303b;--line:#243642;--text:#e7eef4;
+    --muted:#9db0bd;--faint:#6c7e8b;--teal:#3fc3dc;--red:#ff6b5c;--amber:#e6b35c;--green:#48c98a;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 80px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  header h1{font-size:20px;margin:0;letter-spacing:-.01em}
+  .live{margin-left:auto;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;
+    color:var(--green);display:flex;align-items:center;gap:7px}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
+  .live.off{color:var(--red)} .live.off .dot{background:var(--red);animation:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stat .k{font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .stat .v{font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .stat.red .v{color:var(--red)}.stat.green .v{color:var(--green)}.stat.teal .v{color:var(--teal)}
+  .feed{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .feedhd{padding:12px 16px;border-bottom:1px solid var(--line);font:600 11px var(--mono);
+    letter-spacing:.1em;text-transform:uppercase;color:var(--faint);display:flex;justify-content:space-between}
+  .row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);
+    animation:in .3s ease}
+  @keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .row:last-child{border-bottom:0}
+  .pill{flex:none;font:600 11px var(--mono);padding:4px 9px;border-radius:7px;letter-spacing:.02em}
+  .p-phish{background:rgba(255,107,92,.15);color:var(--red)}
+  .p-legit{background:rgba(72,201,138,.13);color:var(--green)}
+  .prob{flex:none;width:52px;text-align:right;font:600 13px var(--mono);font-variant-numeric:tabular-nums}
+  .url{flex:1;min-width:0;font:13px var(--mono);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .url small{color:var(--faint)}
+  .mods{flex:none;display:flex;gap:4px}
+  .mod{font:600 9px var(--mono);padding:2px 5px;border-radius:5px;background:var(--panel);color:var(--muted);text-transform:uppercase}
+  .by{flex:none;font:10px var(--mono);color:var(--faint);width:120px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ago{flex:none;font:11px var(--mono);color:var(--faint);width:44px;text-align:right}
+  .empty{padding:40px;text-align:center;color:var(--faint)}
+  .reasons{font-size:12px;color:var(--muted);padding:0 16px 10px 16px;margin-top:-4px}
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.by,.mods{display:none}}
+  .controls{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  .search{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--line);
+    color:var(--text);border-radius:10px;padding:10px 13px;font:13px var(--mono);outline:none}
+  .search:focus{border-color:var(--teal)}
+  .chips{display:flex;gap:6px}
+  .chip{font:600 11px var(--mono);letter-spacing:.03em;padding:8px 12px;border-radius:9px;cursor:pointer;
+    background:var(--surface);border:1px solid var(--line);color:var(--muted);text-transform:uppercase}
+  .chip.on{background:var(--panel);border-color:var(--teal);color:var(--teal)}
+  .exp{font:600 11px var(--mono);letter-spacing:.03em;padding:8px 12px;border-radius:9px;cursor:pointer;
+    background:var(--teal);border:0;color:#08222a;text-transform:uppercase}
+  .row.hide{display:none}
+  .trust{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+  .trust .th{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+  .trust .tin{display:flex;gap:8px}
+  .trust input{flex:1;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px 12px;font:13px var(--mono);outline:none}
+  .trust input:focus{border-color:var(--teal)}
+  .trust button{background:var(--teal);color:#08222a;border:0;border-radius:9px;padding:9px 14px;font:600 12px var(--mono);cursor:pointer}
+  .tdoms{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .tdom{font:12px var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:4px 10px;color:var(--muted);display:flex;gap:7px;align-items:center}
+  .tdom b{color:var(--green)}.tdom span{cursor:pointer;color:var(--faint)}.tdom span:hover{color:var(--red)}
+</style></head>
+<body><div class="wrap">
+  <header>
+    <span style="font-size:22px">🛡️</span>
+    <h1>PhishNet — Live Activity</h1>
+    <span class="live" id="live"><span class="dot"></span>Live</span>
+  </header>
+  <div class="stats">
+    <div class="stat teal"><div class="k">Total scans</div><div class="v" id="s-total">0</div></div>
+    <div class="stat red"><div class="k">Phishing blocked</div><div class="v" id="s-phish">0</div></div>
+    <div class="stat green"><div class="k">Legitimate</div><div class="v" id="s-legit">0</div></div>
+    <div class="stat"><div class="k">Uptime</div><div class="v" id="s-up">0s</div></div>
+  </div>
+  <div class="trust">
+    <div class="th">Trusted domains — never flagged (your portals, intranet, etc.)</div>
+    <div class="tin"><input id="td" placeholder="e.g. upes.ac.in" autocomplete="off"><button id="tadd">Trust</button></div>
+    <div class="tdoms" id="tdoms"></div>
+  </div>
+  <div class="controls">
+    <input class="search" id="q" placeholder="Search URL or host…" autocomplete="off">
+    <div class="chips">
+      <span class="chip on" data-f="all">All</span>
+      <span class="chip" data-f="phishing">Phishing</span>
+      <span class="chip" data-f="suspicious">Suspicious</span>
+      <span class="chip" data-f="safe">Safe</span>
+    </div>
+    <button class="exp" id="export">⤓ CSV</button>
+  </div>
+  <div class="feed">
+    <div class="feedhd"><span>Recent scans</span><span id="count"></span></div>
+    <div id="rows"><div class="empty">Waiting for the extension to scan a page…</div></div>
+  </div>
+</div>
+<script>
+let ALL=[], filter="all", query="";
+function ago(t){const s=Math.max(0,Math.round(Date.now()/1000-t));
+  return s<60?s+"s":s<3600?Math.round(s/60)+"m":Math.round(s/3600)+"h";}
+function upt(s){return s<60?s+"s":s<3600?Math.round(s/60)+"m":(s/3600).toFixed(1)+"h";}
+function host(u){try{return new URL(u).host}catch(e){return u}}
+function path(u){try{const x=new URL(u);return x.pathname+x.search}catch(e){return ""}}
+function cat(e){return e.verdict==="phishing"?"phishing":(e.p>0.15?"suspicious":"safe");}
+function render(){
+  const rows=document.getElementById("rows");
+  let ev=ALL.filter(e=>filter==="all"||cat(e)===filter);
+  if(query) ev=ev.filter(e=>(e.url||"").toLowerCase().includes(query));
+  document.getElementById("count").textContent=ev.length+" shown";
+  if(!ev.length){rows.innerHTML='<div class="empty">'+(ALL.length?'No matches.':'Waiting for the extension to scan a page…')+'</div>';return;}
+  rows.innerHTML=ev.map(e=>{
+    const phish=e.verdict==="phishing";
+    const mods=(e.modalities||[]).map(m=>`<span class="mod">${m}</span>`).join("");
+    return `<div class="row">
+      <span class="pill ${phish?'p-phish':'p-legit'}">${phish?'PHISH':'SAFE'}</span>
+      <span class="prob" style="color:${phish?'var(--red)':'var(--faint)'}">${(e.p*100).toFixed(0)}%</span>
+      <span class="url"><b>${host(e.url)}</b><small>${path(e.url)}</small></span>
+      <span class="mods">${mods}</span>
+      <span class="by">${e.decided_by||''}</span>
+      <span class="ago">${ago(e.t)}</span>
+    </div>`;
+  }).join("");
+}
+async function tick(){
+  let d; try{ d=await (await fetch("/activity?limit=500",{cache:"no-store"})).json(); }
+  catch(e){ const l=document.getElementById("live"); l.className="live off";
+    l.innerHTML='<span class="dot"></span>Server offline'; return; }
+  const l=document.getElementById("live"); l.className="live"; l.innerHTML='<span class="dot"></span>Live';
+  document.getElementById("s-total").textContent=d.stats.total;
+  document.getElementById("s-phish").textContent=d.stats.phishing;
+  document.getElementById("s-legit").textContent=d.stats.legitimate;
+  document.getElementById("s-up").textContent=upt(d.stats.uptime_s);
+  ALL=d.events; render();
+}
+document.getElementById("q").addEventListener("input",e=>{query=e.target.value.toLowerCase().trim();render();});
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+  c.classList.add("on"); filter=c.dataset.f; render();});
+document.getElementById("export").onclick=()=>{
+  const rowsCsv=[["time","verdict","phishing_probability","decided_by","modalities","url"]]
+    .concat(ALL.map(e=>[new Date(e.t*1000).toISOString(),e.verdict,e.p,e.decided_by||"",
+      (e.modalities||[]).join("|"),(e.url||"").replace(/"/g,'""')]));
+  const csv=rowsCsv.map(r=>r.map(c=>`"${c}"`).join(",")).join(String.fromCharCode(10));
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="phishnet_activity_"+Date.now()+".csv"; a.click();
+};
+async function loadTrusted(){
+  let d; try{ d=await (await fetch("/trusted",{cache:"no-store"})).json(); }catch(e){ return; }
+  const box=document.getElementById("tdoms");
+  box.innerHTML=(d.domains||[]).map(x=>`<span class="tdom"><b>${x}</b><span data-d="${x}">✕</span></span>`).join("")
+    || '<span style="color:var(--faint);font-size:12px">None yet.</span>';
+  box.querySelectorAll("span[data-d]").forEach(el=>el.onclick=async()=>{
+    await fetch("/trusted",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({domain:el.dataset.d})});
+    loadTrusted(); tick();});
+}
+async function addTrusted(){
+  const v=document.getElementById("td").value.trim(); if(!v) return;
+  await fetch("/trusted",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({domain:v})});
+  document.getElementById("td").value=""; loadTrusted(); tick();
+}
+document.getElementById("tadd").onclick=addTrusted;
+document.getElementById("td").addEventListener("keydown",e=>{if(e.key==="Enter")addTrusted();});
+loadTrusted();
+tick(); setInterval(tick,1500);
+</script>
+</body></html>
