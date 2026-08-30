@@ -66,10 +66,12 @@ h3 { font-size: 11.5pt; margin: 13pt 0 4pt; color: #222; }
 h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
 table { break-before: avoid; page-break-before: avoid; }
 p { orphans: 2; widows: 2; }
-p { margin: 0 0 8pt; text-align: justify; }
+p { margin: 0 0 8pt; text-align: justify; hyphens: auto;
+    -webkit-hyphens: auto; }
 code { font-family: "SF Mono","Consolas",monospace; font-size: 9pt;
        background: #f4f4f4; padding: 0.5pt 3pt; border-radius: 3px;
-       word-break: normal; overflow-wrap: break-word; }
+       word-break: normal; overflow-wrap: break-word; hyphens: none; }
+code.brk { overflow-wrap: anywhere; word-break: break-all; }
 pre { background: #f6f8fa; padding: 8pt; border-radius: 5px; overflow-x: auto; font-size: 8.5pt; }
 table { border-collapse: collapse; width: 100%; margin: 8pt 0 12pt; font-size: 9pt; }
 th, td { border: 1px solid #bbb; padding: 3pt 6pt; text-align: center; }
@@ -198,6 +200,24 @@ def restore_math(html_text: str, store: list[str]) -> str:
     return html_text
 
 
+
+LONG_CODE = 24   # chars; below this a token stays whole (family_id must not split)
+
+
+def mark_long_code(html_text: str) -> str:
+    """Allow long inline-code tokens to break, but keep short identifiers whole.
+
+    Two failure modes pull in opposite directions. `word-break: break-all` on all
+    code split `family_id` across lines; removing it left 45-character URLs
+    wrapping whole, which stretched the preceding justified line into a row of
+    isolated words. Length is what actually distinguishes the two cases.
+    """
+    def repl(m):
+        inner = m.group(1)
+        return (f'<code class="brk">{inner}</code>' if len(inner) >= LONG_CODE
+                else m.group(0))
+    return re.sub(r"<code>(.*?)</code>", repl, html_text, flags=re.S)
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", default=str(PAPER))
@@ -214,7 +234,9 @@ def main() -> int:
     body = md.render(text)
     body = restore_math(body, mstore)
     body = embed_figures(body)
-    html = (f"<!doctype html><html><head><meta charset='utf-8'>"
+    body = mark_long_code(body)
+    # Chrome only applies `hyphens: auto` when the document language is known
+    html = (f"<!doctype html><html lang='en'><head><meta charset='utf-8'>"
             f"<style>{CSS}</style></head><body>{body}</body></html>")
     out_html.write_text(html)
     print(f"wrote {out_html} ({len(html):,} bytes)")

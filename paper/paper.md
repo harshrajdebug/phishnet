@@ -1,8 +1,10 @@
 # PhishNet: A Cross-Modal Attention Framework for Explainable Real-Time Phishing Detection
 
-**Harsh Raj, Aryan Kumar, Ayush Prajapati, Ujjawal Jain**
-School of Computer Science, University of Petroleum and Energy Studies, Dehradun, India
+<div class="byline">
+<b>Harsh Raj, Aryan Kumar, Ayush Prajapati, Ujjawal Jain</b><br/>
+School of Computer Science, University of Petroleum and Energy Studies, Dehradun, India<br/>
 Mentor: Dr. Swati Rastogi
+</div>
 
 ---
 
@@ -62,12 +64,10 @@ seen a brand, a domain, or a template before is structurally behind, because the
 target set turns over too quickly. Second, the sheer breadth of impersonated
 brands makes per-brand models impractical to maintain.
 
-At the same time, the delivery infrastructure has professionalised. Adversary-in-
-the-middle (AiTM) reverse-proxy kits, which sit between the victim and the real
+At the same time, the delivery infrastructure has professionalised. Adversary-in-the-middle (AiTM) reverse-proxy kits, which sit between the victim and the real
 login page to steal the post-authentication session token, have moved from
 bespoke tooling into commodity phishing-as-a-service. Microsoft's 2025 Digital
-Defense Report attributes roughly 80% of recent MFA-bypass breaches to session-
-token theft of this kind [2], and the human element remains central to intrusions
+Defense Report attributes roughly 80% of recent MFA-bypass breaches to session-token theft of this kind [2], and the human element remains central to intrusions
 more broadly: Verizon's 2026 Data Breach Investigations Report finds it present in
 62% of breaches [3]. These kits ship with evasion by default.
 Netcraft and Abnormal both document 2026 kits that fingerprint the visitor,
@@ -154,8 +154,7 @@ encoders (BERT, DistilBERT) fine-tuned on phishing corpora perform well on the
 email and message modality. We use DistilBERT [11] for its accuracy-to-latency ratio,
 which the real-time budget requires.
 
-**Multimodal detection.** Recent work combines modalities. CrossPhire, NetPhish-
-Mix and LLM-based hierarchical-fusion systems all report gains from combining page
+**Multimodal detection.** Recent work combines modalities. CrossPhire, NetPhish-Mix and LLM-based hierarchical-fusion systems all report gains from combining page
 screenshots with URL or HTML signals [6], [7]. Much of this work fuses by
 concatenation or by late score-averaging. Our focus is narrower and, we argue,
 more diagnostic: we ask whether *attention-based* fusion specifically beats
@@ -239,16 +238,14 @@ discipline is applied to the multimodal split.
 
 ### 3.4 Model
 
-The three encoders and the fusion module are described in Section 1's diagram. In
+The architecture comprises three encoders and a fusion module. In
 detail: the **URL encoder** embeds characters (vocabulary 63, including an explicit
 UNK that captures IDN/homoglyph characters as signal rather than dropping them),
 applies parallel convolutions of widths 3–6 with batch norm, max-pools over time,
-and projects to a 256-d embedding. The **visual encoder** is a ResNet-18 (ImageNet-
-initialised) projected to a 256-d L2-normalised embedding, trained with a triplet
+and projects to a 256-d embedding. The **visual encoder** is a ResNet-18 (ImageNet-initialised) projected to a 256-d L2-normalised embedding, trained with a triplet
 loss (margin 0.3, cosine distance) so that same-brand renderings are close;
 detection is a nearest-anchor lookup in a brand index. The **text encoder** is
-DistilBERT with embeddings and the first two transformer blocks frozen, mean-
-pooled over real tokens and projected to 256-d.
+DistilBERT with embeddings and the first two transformer blocks frozen, mean-pooled over real tokens and projected to 256-d.
 
 The **fusion module** stacks the three embeddings, adds a learned modality-type
 embedding to each (attention is otherwise permutation-invariant and could not tell
@@ -580,8 +577,7 @@ The two mechanisms are **statistically indistinguishable**. Their F1 means diffe
 by 0.0005, an order of magnitude inside the standard deviation, and each wins on
 FPR in exactly half the runs. The apparent 5.5× advantage in any single run is an
 artefact of where a handful of points fall relative to the 1%-FPR threshold on a
-task both mechanisms have essentially saturated. We flag this because attention-vs-
-concatenation superiority is frequently asserted in the multimodal phishing
+task both mechanisms have essentially saturated. We flag this because attention-vs-concatenation superiority is frequently asserted in the multimodal phishing
 literature on the strength of single runs; on this task, with error bars, it does
 not hold. The honest takeaway is narrower and, we think, more useful: *fusing the
 modalities is what matters; the choice of fusion operator, here, does not.* We keep
@@ -625,8 +621,7 @@ closer to a real browsing stream.
 Nothing about the model changed. Accuracy actually *rose* (to 0.983), because at a
 2% base rate a detector is rewarded for its behaviour on the now-dominant benign
 class. Yet precision collapsed from 0.99 to 0.55: at deployment prevalence, nearly
-half of the pages the detector flags are false alarms, even though its false-
-positive *rate* is unchanged at 1.58%. This is the arithmetic of imbalance: a
+half of the pages the detector flags are false alarms, even though its false-positive *rate* is unchanged at 1.58%. This is the arithmetic of imbalance: a
 1.58% FPR against 98% benign traffic produces almost as many false positives as
 true positives, and it stays invisible if one reports only accuracy on a balanced
 test set, as most phishing papers do. It is the reason we tune and report on FPR
