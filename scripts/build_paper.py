@@ -117,6 +117,9 @@ SYMBOLS = {
     r"\\beta": "\u03b2", r"\\eta": "\u03b7", r"\\ell": "\u2113",
     r"\\times": "\u00d7", r"\\le": "\u2264", r"\\ge": "\u2265",
     r"\\to": "\u2192", r"\\pm": "\u00b1", r"\\in": "\u2208",
+    # long forms too: the \le/\ge patterns carry a (?![a-zA-Z]) guard, so
+    # \geq would otherwise fall through and print literally
+    r"\\geq": "\u2265", r"\\leq": "\u2264", r"\\neq": "\u2260",
     r"\\sum": "\u2211", r"\\partial": "\u2202", r"\\top": "\u22a4",
     r"\\propto": "\u221d", r"\\approx": "\u2248", r"\\cdot": "\u00b7",
     r"\\qquad": "&emsp;&emsp;", r"\\,": "&thinsp;",

@@ -394,10 +394,11 @@ those gates would have refused.
 The gates also isolate *what* was wrong. Re-running standard batch-hard triplet
 training on the logo-crop corpus — identical loss, backbone and optimiser to the
 run that failed, with only the input representation changed — improves retrieval
-under **every one of the nine attacks**, clean 0.656 → 0.829 and cheap-attack
-mean 0.556 → 0.766 against the untrained control, and passes the competence gate
-(clean skill 0.826, attacked skill 0.762). Robustness rose monotonically across
-40 epochs and plateaued rather than collapsing. The earlier finding that metric
+under **every one of the nine attacks**. Across 13 paired seeds, clean retrieval
+on seen brands rises 0.654 → 0.859 and the cheap-attack mean 0.566 → 0.789
+against the untrained control (both $p < 10^{-5}$), and the baseline passes the
+competence gate. Robustness rose monotonically across 40 epochs and plateaued
+rather than collapsing. The earlier finding that metric
 learning *destroys* robustness was therefore a property of the representation,
 not of the architecture: at 224px a full-page screenshot renders the wordmark at
 roughly 23x21 px, and triplet loss fitted noise because there was no brand
@@ -782,11 +783,13 @@ the explanation agree, which is the property that makes the panel trustworthy.
   inside a multimodal system rather than act as a standalone verdict. The URL and
   text branches carry those 14% of pages unaided.
 - **Most of the visual encoder's gain is brand-specific, not transferable.**
-  On the logo-crop corpus, training lifts seen-brand retrieval by +0.174 clean
-  and +0.210 under cheap attack over untrained ImageNet features. On brands held
-  out of training entirely it lifts them by **+0.033 and +0.027** (0.803 → 0.836
-  clean, 0.712 → 0.739 attacked). The untrained control is already strong
-  zero-shot, and metric learning barely improves on it. The honest reading is
+  On the logo-crop corpus, training lifts seen-brand retrieval by +0.204 clean
+  and +0.224 under cheap attack over untrained ImageNet features (13 paired
+  seeds). On brands held out of training entirely it lifts clean retrieval by
+  only **+0.029** (0.801 → 0.831), and *under attack it makes matters worse*:
+  **−0.032** (0.732 → 0.699, $p = 0.00007$, losing on 12 of 13 seeds). The
+  untrained control is already strong zero-shot, and metric learning does not
+  improve on it — it degrades it. The honest reading is
   that the encoder learns to separate the brands it has seen far better than it
   learns a general notion of "brand mark", so our zero-shot claims rest on the
   small delta rather than the large one, and a reader should treat the seen-brand
