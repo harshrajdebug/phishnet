@@ -98,7 +98,12 @@ table, figure, pre { page-break-inside: avoid; }
 def embed_figures(html: str) -> str:
     """Inline referenced figure PNGs as base64 so the HTML is self-contained."""
     def repl(m):
-        alt, src = m.group(1), m.group(2)
+        tag = m.group(0)
+        src_m = re.search(r'src="([^"]+)"', tag)
+        alt_m = re.search(r'alt="([^"]*)"', tag)
+        if not src_m:
+            return tag
+        src, alt = src_m.group(1), (alt_m.group(1) if alt_m else "")
         p = (ROOT / "paper" / src) if not src.startswith("/") else Path(src)
         if not p.exists():
             p = FIGDIR / Path(src).name
@@ -108,7 +113,10 @@ def embed_figures(html: str) -> str:
             return (f'<figure><img src="data:image/png;base64,{b64}" alt="{alt}"/>'
                     f'{cap}</figure>')
         return m.group(0)
-    return re.sub(r'<img alt="([^"]*)" src="([^"]+)"\s*/?>', repl, html)
+    # markdown-it emits src before alt; matching a fixed attribute order meant
+    # this never fired, and the "self-contained" HTML silently depended on Chrome
+    # resolving relative paths from wherever the file happened to be written.
+    return re.sub(r"<img\b[^>]*?>", repl, html)
 
 
 
