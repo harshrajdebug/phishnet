@@ -1,4 +1,4 @@
-"""Assemble the PhishArmor manuscript from its section drafts, in order."""
+"""Assemble the PhishNet manuscript from its section drafts, in order."""
 from pathlib import Path
 
 ORDER = [
@@ -11,7 +11,7 @@ ORDER = [
 ]
 P = Path("paper")
 # single newlines are collapsed by markdown, which ran the byline together
-TITLE = """# PhishArmor: Adversarial Robustness for Phishing Detection as an Economic Problem
+TITLE = """# PhishNet: Adversarial Robustness for Phishing Detection as an Economic Problem
 
 <div class="byline">
 <b>Harsh Raj, Aryan Kumar, Ayush Prajapati, Ujjawal Jain</b><br/>

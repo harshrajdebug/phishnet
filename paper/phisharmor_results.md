@@ -28,8 +28,8 @@ averaging it.
 
 A detector's exposure is not its reliance on a feature, nor that feature's
 manipulation cost, but the ratio. We test this directly. Input-gradient reliance
-is only weakly concentrated on cheap features — $\mathrm{corr}(\text{reliance},
-1/\text{cost}) = +0.201 \pm 0.031$ over five seeds — so an audit that stopped at
+is only weakly concentrated on cheap features, $\mathrm{corr}(\text{reliance},
+1/\text{cost}) = +0.201 \pm 0.031$ over five seeds, so an audit that stopped at
 "does the model use cheap features?" would find little. But per-feature evasion
 success tracks the ratio strongly: $\mathrm{corr}(\text{evasion},
 \text{reliance}/\text{cost}) = \mathbf{+0.774 \pm 0.045}$.
@@ -60,7 +60,7 @@ force the model onto expensive ones. It works as designed and is unusable.
 
 | Mechanism | F1 | ΔF1 | CTE | ΔCTE | corr(reliance, 1/cost) |
 |---|---|---|---|---|---|
-| baseline | 0.9358 | — | 0.064 | — | +0.202 |
+| baseline | 0.9358 |, | 0.064 |, | +0.202 |
 | gradient penalty | 0.8200 | **−12.37%** | 0.195 | +203.9% | **−0.498** |
 | two-stage | 0.8167 | −12.73% | 0.190 | +196.1% | −0.336 |
 | cost-budgeted TRADES | 0.9287 | −0.76% | 0.101 | +57.8% | +0.014 |
@@ -78,7 +78,7 @@ cheap feature it needs is coercive: the feature was load-bearing, and removing
 its gradient removes accuracy with it. Dropping the feature *stochastically*
 leaves it available when present while forcing the model to build redundant
 pathways that survive its absence. Robustness comes from redundancy, not from
-abstinence — and the two are separable only because we measured reliance
+abstinence; and the two are separable only because we measured reliance
 directly and found the better mechanism barely changed it.
 
 ### 4.1.3 The Pareto frontier (P2)
@@ -96,8 +96,8 @@ robustness and remarkably flat in accuracy at the low end.
 | **0.50** | **−0.88%** | **+456.7%** |
 | 0.65 | −1.23% | +461.8% |
 
-At a drop scale of 0.15 the accuracy change is $+0.01\%$ — statistically
-indistinguishable from the baseline, and *positive in sign* — while cost-to-evade
+At a drop scale of 0.15 the accuracy change is $+0.01\%$. Statistically
+indistinguishable from the baseline, and *positive in sign*, while cost-to-evade
 rises 265%. There is no accuracy tax at all at that operating point. Our headline
 configuration (0.50) accepts a 0.88% F1 reduction for a 457% increase in
 cost-to-evade. Beyond 0.65 the frontier flattens: robustness saturates while
@@ -111,7 +111,7 @@ between 0.222 and 0.225, so the result does not depend on precise pricing.
 
 Cost-to-evade is a time-to-event quantity, and a naive median is biased when
 evasion fails within budget. Censoring is not negligible and it is *differential*:
-9.4% for the baseline against 38.3% for cost-weighted dropout — the defence works
+9.4% for the baseline against 38.3% for cost-weighted dropout, the defence works
 precisely by making evasion fail more often, so the arm we care about is the one
 whose median is most understated. Comparing naive medians therefore understates
 the defence.
@@ -120,7 +120,7 @@ the defence.
 
 | Model | F1 | ΔF1 | KM median CTE | ΔCTE | Censored |
 |---|---|---|---|---|---|
-| baseline | 0.9358 | — | 0.065 | — | 9.4% |
+| baseline | 0.9358 |, | 0.065 |, | 9.4% |
 | cost-weighted dropout | 0.9263 | −1.01% | 0.371 | +470.5% | 38.3% |
 | cost-budgeted TRADES (β=2) | 0.9117 | −2.57% | 0.413 | **+534.6%** | 33.6% |
 
@@ -140,7 +140,7 @@ nothing, and we report this because the failure is the finding.
 
 On full-page screenshots downscaled to 224×224, the trained encoder reached 0.299
 clean top-1 retrieval against a 0.0043 chance floor and **0.017 under cheap
-attack** — indistinguishable from noise. Worse, it was *less robust than doing
+attack**. Indistinguishable from noise. Worse, it was *less robust than doing
 nothing*: untrained ImageNet features scored 0.032 under the same attacks, and the
 trained model lost on every attack individually (JPEG 0.032 → 0.013, logo
 occlusion 0.091 → 0.007) while doubling clean accuracy (0.134 → 0.299). Judged on
@@ -153,8 +153,8 @@ loss had no brand structure left to fit and fitted noise instead.
 Cropping to the detected logo region rather than downscaling the page changes the
 input and nothing else. On 3,162 logo crops over 78 brands, untrained ImageNet
 features alone reach 0.717 clean against a 0.0169 chance floor. Standard
-batch-hard triplet training — identical loss, backbone and optimiser to the run
-that failed — then improves retrieval under **all nine attacks**, clean 0.656 →
+batch-hard triplet training, identical loss, backbone and optimiser to the run
+that failed, then improves retrieval under **all nine attacks**, clean 0.656 →
 0.829 and cheap-attack mean 0.556 → 0.766, with robustness rising monotonically
 across 40 epochs and plateauing rather than collapsing.
 
@@ -180,12 +180,12 @@ not the records.
 
 The clearest evidence is a signed effect, not a small delta. On brands held out of
 training entirely, standard triplet loss scores **0.377 ± 0.088 on grayscale inputs
-while untrained ImageNet features score 0.619 ± 0.056** — a paired difference of
+while untrained ImageNet features score 0.619 ± 0.056**. A paired difference of
 **−0.242 (t = −14.2, p < 10⁻⁵, losing on 13 of 13 seeds)**. The effect is not
 confined to grayscale: on the cheap-attack mean the trained baseline also falls
 below the untrained control (0.699 vs 0.732, **t = −5.95, p = 0.00007**, losing on
 12 of 13 seeds). Training did not merely
-fail to acquire colour-invariance — it *destroyed* robustness the initialisation
+fail to acquire colour-invariance, it *destroyed* robustness the initialisation
 already had, reliably and on every seed.
 
 This is what over-indexing on colour looks like. Colour is the cheapest
@@ -243,7 +243,7 @@ augmentation policies.
 
 Cost-weighted augmentation lifts grayscale retrieval on unseen brands from 0.377
 to **0.635**. We are precise about the ceiling: 0.635 against the untrained
-control's 0.619 is a difference of +0.016 with $p = 0.32$ — statistically
+control's 0.619 is a difference of +0.016 with $p = 0.32$, statistically
 indistinguishable even at 13 seeds. Augmentation **recovers** the colour
 robustness that training destroyed; it does not exceed what the ImageNet
 initialisation already supplied. Prediction 3 is confirmed in direction and
@@ -259,16 +259,15 @@ Both are significant; neither is large.
 The path to this number is itself the methodological point. An unpaired single-seed
 run reported +0.068. Pairing initialisation, batches and evaluation draws cut that
 to +0.0099 at five seeds, where it was *not* separable from zero (p = 0.12) at 33%
-power. Only at thirteen seeds — the sample size the observed effect size
-$d_z = 0.93$ requires for 80% power — does the effect resolve, and it resolves
+power. Only at thirteen seeds. The sample size the observed effect size
+$d_z = 0.93$ requires for 80% power, does the effect resolve, and it resolves
 *upward*, to +0.0144. Two conclusions follow, and they point in opposite
 directions. Four fifths of the original margin was an artefact of unpaired
 evaluation. But the residue is real, and an analysis that had stopped at five
 seeds would have wrongly reported a null.
 
 We are correspondingly careful about magnitude. Cost weighting improves zero-shot
-attacked retrieval by roughly **1.4 percentage points** over uniform augmentation
-— against the **6.9 points** that augmentation itself contributes over no
+attacked retrieval by roughly **1.4 percentage points** over uniform augmentation, against the **6.9 points** that augmentation itself contributes over no
 augmentation at all (§4.3.2). The dominant effect by a factor of five is that
 attacks are simulated during training; *pricing* those attacks is a real but
 second-order refinement on top of it. A reader deciding what to implement should
@@ -278,9 +277,8 @@ This yields a **modality contrast** rather than a uniform endorsement. In the
 discrete lexical setting cost weighting was not a refinement but a necessity: its
 undifferentiated comparator, a uniform gradient penalty, cost **12.4%** of clean F1
 (§4.1.2), a catastrophic price no amount of robustness would justify. In the
-continuous visual embedding space the undifferentiated comparator is nearly free —
-uniform augmentation costs 1.6 points of clean zero-shot retrieval, not
-significantly different from baseline (p = 0.068) — and cost weighting buys 1.4
+continuous visual embedding space the undifferentiated comparator is nearly free. Uniform augmentation costs 1.6 points of clean zero-shot retrieval, not
+significantly different from baseline (p = 0.068); and cost weighting buys 1.4
 points of attacked retrieval on top. The value of pricing manipulations is
 therefore real in both modalities but differs by an order of magnitude in
 importance, and we report where it is load-bearing and where it is a refinement.
@@ -296,15 +294,15 @@ forces a representation that transfers better in the clean case.
 ### 4.3.5 The economic trade-off, measured
 
 The place cost weighting differs most sharply from uniform augmentation is exactly
-where the cost model says it should. On `logo_delete` — an attack that erases the
-brand mark — uniform augmentation scores 0.544 and cost weighting 0.373, a paired
+where the cost model says it should. On `logo_delete`, an attack that erases the
+brand mark, uniform augmentation scores 0.544 and cost weighting 0.373, a paired
 difference of **−0.172 (t = −10.36, p < 10⁻⁵, losing on 13 of 13 seeds)**.
 
 The sharpest form of the result is a **null**. On `logo_delete`, cost-weighted
 augmentation is statistically indistinguishable from *no augmentation whatsoever*
 (−0.010, **p = 0.55**), while uniform augmentation gains +0.162 (p < 10⁻⁵). Cost
 weighting spends essentially **nothing** defending an attack that destroys the
-victim's own recognition cue — and nevertheless achieves *higher* aggregate
+victim's own recognition cue; and nevertheless achieves *higher* aggregate
 zero-shot robustness than the arm that spends 11% of its training budget there
 (§4.3.4). The allocation is not merely defensible on threat-model grounds; on this
 corpus it is also the better-performing one.
@@ -312,8 +310,8 @@ corpus it is also the better-performing one.
 We state the cost of that allocation plainly. Against the untrained control,
 cost-weighted augmentation is significantly *worse* on `logo_delete` (−0.054,
 p = 0.027): the policy does not simply decline to improve there, it gives ground.
-An adversary willing to abandon the brand cue entirely — and thereby most of the
-campaign's conversion — would find this model easier to evade than an
+An adversary willing to abandon the brand cue entirely; and thereby most of the
+campaign's conversion. Would find this model easier to evade than an
 off-the-shelf ImageNet encoder. Whether that trade is correct depends entirely on
 whether the conversion penalty in §2.2 reflects real attacker economics, which is
 a modelling assumption and not something these experiments establish.
@@ -333,7 +331,7 @@ construction, so a defence that reallocates capacity toward cheap attacks pushes
 an ordering the task already supplies.
 
 This is the strongest argument against our own framing. It is why we evaluate on
-zero-shot transfer rather than on robustness to cheap attacks — and, in light of
+zero-shot transfer rather than on robustness to cheap attacks; and, in light of
 §4.3.4, why we report the visual cost model as a contrast with the lexical setting
 rather than as a second demonstration of its superiority.
 
@@ -344,7 +342,7 @@ rather than as a second demonstration of its superiority.
 Cropping to the logo region is what made the visual task learnable, but it can
 only act where a logo is found. Running Phishpedia's own released detector over its
 own 30k benchmark, **4,208 of 29,496 samples (14.27%) yield no logo region at
-all** — an empty coordinate file. Any method requiring a detected brand mark is
+all**, an empty coordinate file. Any method requiring a detected brand mark is
 therefore capped at **85.7% recall on this corpus before a single evasion attack
 is attempted**.
 
@@ -353,6 +351,6 @@ a theoretical limit of logo matching, and a stronger detector would move it. It
 nonetheless bounds the entire visual arm, and it is the clearest quantitative
 argument for why brand-mark matching must sit inside a multimodal system rather
 than issue verdicts alone. On those 14% of pages the URL and text branches carry
-the decision unaided — which is the architectural claim §4.1 and §4.2 jointly
+the decision unaided: which is the architectural claim §4.1 and §4.2 jointly
 support: the modalities fail in different places, and the cost structure that
 governs their defence differs between them.

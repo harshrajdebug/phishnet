@@ -22,8 +22,8 @@ softplus margin. Batches are $P{\times}K$ with $P=8$ brands and $K=4$ crops, 40
 steps per epoch for 30 epochs, Adam at $10^{-4}$.
 
 The corpus is built from the Phishpedia benchmark. Rather than downscaling a
-1366px page — which renders a wordmark at roughly $23\times21$ px and destroys the
-signal (§4.2.1) — we crop to the highest-confidence detected logo region, pad to a
+1366px page: which renders a wordmark at roughly $23\times21$ px and destroys the
+signal (§4.2.1), we crop to the highest-confidence detected logo region, pad to a
 square to preserve aspect ratio, and resize to $128\times128$. After removing
 exact-duplicate crops (§3.4) this yields **3,162 crops over 78 brands**. Splits are
 **family-disjoint**: `family_id` is a phishing-kit hash, so pages sharing one are
@@ -57,8 +57,8 @@ the wrong feasible set. We replace it with the set of manipulations the attacker
 can *afford*: all feature subsets $S$ with $|S| \le 3$ and $\sum_{i\in S} c_i \le
 B$. At $B = 0.15$ this is **1,345 of the 4,525 subsets** with $k \le 3$. The inner
 step selects the affordable subset maximising the KL divergence between the clean
-and perturbed predictive distributions — a stochastic argmax over 16 sampled
-candidates per batch — and the outer objective adds $\beta \cdot \mathrm{KL}$ to
+and perturbed predictive distributions, a stochastic argmax over 16 sampled
+candidates per batch; and the outer objective adds $\beta \cdot \mathrm{KL}$ to
 the classification loss. Perturbed features are moved to the benign centroid
 (zero in standardised space), which is where an attacker aims.
 
@@ -96,8 +96,8 @@ pinning the median at the budget and rendering the metric blind to improvement.
 
 Because evasion sometimes fails within budget, CTE is **right-censored** and we
 estimate its median with a Kaplan–Meier curve. This is not a stylistic preference.
-Censoring is both substantial and *differential* — 9.4% for the baseline against
-38.3% for the defended model — because the defence works precisely by making
+Censoring is both substantial and *differential*. 9.4% for the baseline against
+38.3% for the defended model: because the defence works precisely by making
 evasion fail. A naive median therefore truncates the defended model's most
 successful outcomes and systematically understates it (§4.1.4).
 
@@ -129,7 +129,7 @@ synthetic corpus failed exactly this test while passing every competence check.
 **Split-leakage gate.** The first two gates both passed on a corpus in which 37.3%
 of query crops were pixel-identical to gallery crops, despite a `family_id` split
 with zero violations across 75 brands. The gate fingerprints the tensors that
-reach the model — not the records they came from — and fails any split whose query
+reach the model, not the records they came from, and fails any split whose query
 set duplicates more than 2% of the gallery. It is applied to the train/gallery,
 train/query, gallery/query and zero-shot splits alike, since duplicate crops in a
 zero-shot set inflate precisely the generalisation claim that set exists to make.

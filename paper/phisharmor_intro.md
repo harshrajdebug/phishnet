@@ -9,7 +9,7 @@ this paper.
 Visual and lexical phishing detectors are structurally brittle to changes an
 attacker can make for free. Recompressing a screenshot, shifting a page's palette,
 lengthening a URL path, or adding a subdomain requires no money, no engineering
-time, and no infrastructure — the attacker already owns the DNS zone and the
+time, and no infrastructure, the attacker already owns the DNS zone and the
 document. We show this brittleness is not incidental. Trained with a standard
 metric-learning objective on brand logos, an encoder scores **0.377** top-1
 retrieval on grayscale inputs from unseen brands while *untrained* ImageNet
@@ -20,8 +20,7 @@ look past it.
 
 ## 1.2 The gap: $L_p$ balls do not describe semantic attacks
 
-The standard robustness toolkit — adversarial training, TRADES, gradient penalties
-— defines the threat as a norm ball around an input. That framing is a poor fit
+The standard robustness toolkit, adversarial training, TRADES, gradient penalties, defines the threat as a norm ball around an input. That framing is a poor fit
 here for two reasons.
 
 First, the operations a phishing kit actually performs are *semantic*, not
@@ -33,7 +32,7 @@ difficulty in the attacker's world.
 
 Second, and less obviously, the norm-ball framing has no way to express that
 **some evasions defeat the attacker along with the detector**. Removing the brand
-name from a URL beats brand-matching for free — and removes the cue the victim
+name from a URL beats brand-matching for free; and removes the cue the victim
 relies on to be deceived. An attacker who strips every deceptive signal has evaded
 detection by ceasing to phish. No $L_p$ budget can represent that, because the
 constraint is not on the perturbation's size but on its effect on a third party.
@@ -42,7 +41,7 @@ constraint is not on the perturbation's size but on its effect on a third party.
 
 We argue that adversarial robustness in phishing is an economic problem before it
 is a geometric one, and we make that operational. We price each manipulation on
-three axes — money, engineering effort, and *victim conversion* — and evaluate
+three axes, money, engineering effort, and *victim conversion*, and evaluate
 defences by **cost-to-evade (CTE)**: the cheapest bundle of manipulations that
 flips a detected phish to benign. The third axis is the one the literature omits
 and the one that does the work. It is what makes an evasion self-defeating, and
@@ -62,25 +61,19 @@ second-order refinement in the other (§4.3.4).
   while per-feature evasion success correlates strongly with reliance *divided by*
   cost ($+0.774 \pm 0.045$). Auditing a model on reliance alone is a blind spot.
 
-- **The intuitive defence is the wrong one.** Penalising gradient mass on cheap
-  features does relocate the model onto expensive ones, and costs **12.4%** of
-  clean F1 to buy less robustness than a cheaper mechanism. Cost-weighted
-  *stochastic dropout* barely changes reliance and delivers **+388%** CTE for a
-  0.56% F1 cost. Robustness comes from redundancy, not abstinence.
+- **The intuitive defence is the wrong one, and there is an operating point with
+  no accuracy tax.** Penalising gradient mass on cheap features relocates the
+  model onto expensive ones and costs **12.4%** of clean F1 to buy less robustness
+  than cost-weighted *stochastic dropout*, which barely changes reliance. At a
+  drop scale of 0.15 the change in clean F1 is $+0.01\%$, indistinguishable from
+  baseline and positive in sign, while cost-to-evade rises **265%**.
 
-- **There is an operating point with no accuracy tax.** At a drop scale of 0.15
-  the change in clean F1 is $+0.01\%$ — indistinguishable from baseline and
-  positive in sign — while cost-to-evade rises **265%**.
-
-- **Standard metric learning is a lazy learner.** It over-indexes on colour, which
-  simultaneously explains a grayscale vulnerability *below the untrained control*
-  and a near-total failure to transfer: seen brands gain $+0.204$ clean over that
-  control, unseen brands only $+0.029$ — and on unseen brands *under attack* the
-  trained encoder is $-0.033$ **worse** than the untrained one.
-
-- **Logo matching cannot stand alone.** Running Phishpedia's own released detector
-  over its own benchmark, 14.27% of samples yield no logo region at all, capping
-  any logo-dependent method at **85.7% recall** before an attack is attempted.
+- **Standard metric learning is a lazy learner, and logo matching cannot stand
+  alone.** The encoder over-indexes on colour, which explains both a grayscale
+  vulnerability below the untrained control and a near-total failure to transfer:
+  unseen brands gain only $+0.029$ clean and are $-0.033$ *worse* under attack.
+  Separately, 14.27% of the Phishpedia benchmark yields no logo region at all,
+  capping any logo-dependent method at **85.7% recall**.
 
 ---
 
@@ -91,7 +84,7 @@ second-order refinement in the other (§4.3.4).
 We model an attacker who controls the URL, the hosting, and the rendered page, and
 who is subject to one constraint the detection literature rarely encodes: the
 campaign must still deceive a human. Every manipulation is therefore charged
-against two budgets simultaneously — what it costs to perform, and what it costs
+against two budgets simultaneously, what it costs to perform, and what it costs
 in victim conversion.
 
 These budgets are not independent, and their coupling is structural. A
@@ -106,7 +99,7 @@ on what any cost-weighted defence can claim, rather than as evidence for one.
 The defender's objective follows. It is **not** to be robust to every semantic
 manipulation. Robustness to `logo_delete` protects against an adversary who has
 already abandoned the campaign's purpose. The objective is to **maximise the cost
-an attacker must pay to evade, subject to preserving clean accuracy** — which
+an attacker must pay to evade, subject to preserving clean accuracy**: which
 means deliberately declining to spend capacity on manipulations a rational
 adversary will not choose.
 
@@ -136,8 +129,7 @@ that carry the deception itself:
 
 (rank 1 = cheapest). Without the third axis, dropping the brand name from the URL
 prices as among the *cheapest* evasions available, and a cost-aware defence would
-correctly conclude it should spend most of its capacity defending against it —
-against an attack that ends the campaign. The conversion axis moves these three
+correctly conclude it should spend most of its capacity defending against it, against an attack that ends the campaign. The conversion axis moves these three
 from ranks 3–5 to ranks 27–29. This is the difference between pricing what an
 attacker *can* do and pricing what an attacker *will* do.
 
@@ -166,7 +158,6 @@ We report CTE as the total price of the cheapest bundle of manipulations that
 moves a detected phishing sample below the operating threshold, searched greedily
 by score reduction per unit cost under a budget. Because evasion sometimes fails
 within budget, CTE is a right-censored time-to-event quantity and we estimate its
-median with a Kaplan–Meier curve. Censoring is both substantial and *differential*
-— 9.4% for the baseline against 38.3% for the defended model — so naive medians
+median with a Kaplan–Meier curve. Censoring is both substantial and *differential*, 9.4% for the baseline against 38.3% for the defended model, so naive medians
 systematically understate the defence, whose entire mechanism is to make evasion
 fail more often (§4.1.4).
