@@ -217,6 +217,12 @@ extension/    manifest + service worker + content script + popup
 paper/        research paper + figures
 ```
 
+## License
+
+The code is released under the [MIT License](LICENSE). This covers the `phishnet` package, the `extension` folder, the `scripts` folder and the `tests` folder.
+
+The paper, the proposal and the figures are released under the [Creative Commons Attribution 4.0 International License](LICENSE-CC-BY-4.0). This covers everything in the `paper` folder and the `proposal` folder.
+
 ## Authors
 
 UPES School of Computer Science, B.Tech CSE (CSF) — Project group:
