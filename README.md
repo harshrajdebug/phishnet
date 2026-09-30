@@ -211,10 +211,16 @@ phishnet/
   models/     url_cnn, text_encoder, visual_siamese, fusion, phishnet
   explain/    url_shap, gradcam
   train/      train_url, train_text, train_visual, train_fusion, common
-  eval/       metrics, benchmark, make_figures
+  eval/       metrics, benchmark, make_figures, plus the ablation, adversarial,
+              cross-dataset, bootstrap and seed studies behind the paper
   serve/      inference, api
 extension/    manifest + service worker + content script + popup
 paper/        research paper + figures
+proposal/     project proposal and artifact description
+results/      committed JSON results that every number in the paper comes from
+scripts/      build the paper and artifact, run the evaluations, serve the demo
+tests/        pytest invariants for splitting, encoding, fusion masking and metrics
+data/         not committed: the 3.3 GB corpus, rebuilt by scripts/harvest_phishpedia.py
 ```
 
 ## License
